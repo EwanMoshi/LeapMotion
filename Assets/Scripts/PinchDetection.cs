@@ -21,9 +21,10 @@ public class PinchDetection : MonoBehaviour {
     private bool togglePinch = false;
 
     protected Collider grabbedImage;
+    protected RigidbodyConstraints previousConstraints;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start () {
         handModel = transform.GetComponent<HandModel>(); //transform.GetComponent<HandModel>();
 	}
 	
@@ -58,10 +59,12 @@ public class PinchDetection : MonoBehaviour {
         }
 
         if (grabbedImage != null) {
+            //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
             //Debug.Log("Something has been grabbed");
+            FreePositionFreezeRotation();
             Vector3 moveDistance = pinchPos - grabbedImage.transform.position;
-            Debug.Log("moveDistance >>>>  "+moveDistance);
-            Debug.Log("force >>>>> " + force * moveDistance);
+            //Debug.Log("moveDistance >>>>  "+moveDistance);
+            //Debug.Log("force >>>>> " + force * moveDistance);
             grabbedImage.GetComponent<Rigidbody>().AddForce(force * moveDistance);
         }
        
@@ -71,7 +74,21 @@ public class PinchDetection : MonoBehaviour {
         //}
     }
 
+    // This function frees the constraints so the image can be moved around and rotated
+    // but then freeze rotation so we don't rotate it while moving
+    // RigibodyConstraints API has no support for only freeing the position so we have 
+    // free all, then freeze rotation
+    void FreePositionFreezeRotation() {
+        grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
+        grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
+    }
+
     void OnReleasePinch() {
+        if (grabbedImage != null) {
+            //grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll; // freeze all (position and rotation)   
+            grabbedImage.GetComponent<Rigidbody>().constraints = previousConstraints; //we can get rid of this if we don't want other things in the world that use gravity
+        }
+        //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
         grabbedImage = null;
         isPinching = false;
         //Debug.Log("ReleasePinch");
@@ -87,10 +104,11 @@ public class PinchDetection : MonoBehaviour {
             Vector3 newDistance = pinchPos - nearImages[i].transform.position;
             if(nearImages[i].GetComponent<Rigidbody>() != null && newDistance.magnitude < dist.magnitude && !nearImages[i].transform.IsChildOf(transform)) {
                 //Debug.Log("NEAR IMAGE >>>> " +nearImages[i].ToString());
-                Debug.Log("pinchPos >>>> " + pinchPos);
+                //Debug.Log("pinchPos >>>> " + pinchPos);
                 Debug.Log("ImagePos >>>> " + nearImages[i].gameObject.name);
                 grabbedImage = nearImages[i];
                 dist = newDistance;
+                previousConstraints = grabbedImage.GetComponent<Rigidbody>().constraints; // only use this for things like cubes in the world otherwise just RigidbodyConstraints.FreezeAll;
             }
         }
     }
