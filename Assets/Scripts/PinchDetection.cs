@@ -14,8 +14,8 @@ public class PinchDetection : MonoBehaviour {
     private HandModel handModel;
     private HandDrop hand;
 
-    public float force = 100.0f;
-    public float magnetDistance = 5.0f;
+    public float force = 50.0f;
+    public float magnetDistance = 0.05f;
 
     private bool isPinching = false;
     private bool togglePinch = false;
