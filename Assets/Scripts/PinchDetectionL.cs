@@ -2,7 +2,7 @@
 using System.Collections;
 using Leap.Unity;
 
-public class PinchDetection : MonoBehaviour {
+public class PinchDetectionL : MonoBehaviour {
 
     [SerializeField]
     private float maxPinchDistance;
@@ -17,9 +17,12 @@ public class PinchDetection : MonoBehaviour {
     public float force = 50.0f;
     public float magnetDistance = 0.05f;
 
-    private bool isPinching = false;
-    private bool togglePinch = false;
+    public static bool isPinchingL = false;
+    public static Vector3 pinchPosL;
+    public static Vector3 previousPinchPosL = new Vector3(0.0f, 0.0f, 0.0f);
+    private Vector3 prevPinchDistance;
 
+    private bool togglePinch = false;
     protected Collider grabbedImage;
     protected RigidbodyConstraints previousConstraints;
 
@@ -49,23 +52,44 @@ public class PinchDetection : MonoBehaviour {
         }
 
         // store position of the pinch (at thumb)
-        Vector3 pinchPos = handModel.fingers[0].GetTipPosition(); 
+        pinchPosL = handModel.fingers[0].GetTipPosition(); 
 
-        if (togglePinch && !isPinching) {
-            OnPinch(pinchPos);
+        if (togglePinch && !isPinchingL) {
+            OnPinch(pinchPosL);
         }
-        else if (!togglePinch && isPinching) {
+        else if (!togglePinch && isPinchingL) {
             OnReleasePinch();
         }
 
         if (grabbedImage != null) {
-            //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
-            //Debug.Log("Something has been grabbed");
-            FreePositionFreezeRotation();
-            Vector3 moveDistance = pinchPos - grabbedImage.transform.position;
-            //Debug.Log("moveDistance >>>>  "+moveDistance);
-            //Debug.Log("force >>>>> " + force * moveDistance);
-            grabbedImage.GetComponent<Rigidbody>().AddForce(force * moveDistance);
+            if (PinchDetectionR.isPinchingR) { // ensure both hands are pinching
+                Vector3 pinchDistance = pinchPosL - PinchDetectionR.pinchPosR;
+
+                pinchDistance = new Vector3(pinchDistance.x, pinchDistance.y, pinchDistance.z) * 0.01f;
+
+                if (pinchDistance.magnitude < prevPinchDistance.magnitude)
+                {
+                    grabbedImage.GetComponent<Rigidbody>().transform.localScale -= pinchDistance;
+                }
+                else
+                {
+                    grabbedImage.GetComponent<Rigidbody>().transform.localScale += pinchDistance;
+                }
+
+                Debug.Log(pinchPosL + ">>>>>>>>>>>>>>>>>>>>>" + previousPinchPosL);
+                Debug.Log(PinchDetectionL.pinchPosL + "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" + PinchDetectionL.previousPinchPosL);
+
+                prevPinchDistance = pinchDistance;
+            }
+            else {
+                //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
+                //Debug.Log("Something has been grabbed");
+                FreePositionFreezeRotation();
+                Vector3 moveDistance = pinchPosL - grabbedImage.transform.position;
+                //Debug.Log("moveDistance >>>>  "+moveDistance);
+                //Debug.Log("force >>>>> " + force * moveDistance);
+                grabbedImage.GetComponent<Rigidbody>().AddForce(force * moveDistance);
+            }
         }
        
         //if(grabbedImage != null) {
@@ -90,21 +114,21 @@ public class PinchDetection : MonoBehaviour {
         }
         //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
         grabbedImage = null;
-        isPinching = false;
+        isPinchingL = false;
         //Debug.Log("ReleasePinch");
     }
 
-    void OnPinch(Vector3 pinchPos) {
-        isPinching = true;
+    void OnPinch(Vector3 pinchPosL) {
+        isPinchingL = true;
         //Debug.Log("OnPinch");
-        Collider[] nearImages = Physics.OverlapSphere(pinchPos, magnetDistance);
+        Collider[] nearImages = Physics.OverlapSphere(pinchPosL, magnetDistance);
         Vector3 dist = new Vector3(magnetDistance, 0.0f, 0.0f);
 
         for(int i = 0; i < nearImages.Length; i++) {
-            Vector3 newDistance = pinchPos - nearImages[i].transform.position;
+            Vector3 newDistance = pinchPosL - nearImages[i].transform.position;
             if(nearImages[i].GetComponent<Rigidbody>() != null && newDistance.magnitude < dist.magnitude && !nearImages[i].transform.IsChildOf(transform)) {
                 //Debug.Log("NEAR IMAGE >>>> " +nearImages[i].ToString());
-                //Debug.Log("pinchPos >>>> " + pinchPos);
+                //Debug.Log("pinchPosL >>>> " + pinchPosL);
                 Debug.Log("ImagePos >>>> " + nearImages[i].gameObject.name);
                 grabbedImage = nearImages[i];
                 dist = newDistance;
@@ -112,4 +136,5 @@ public class PinchDetection : MonoBehaviour {
             }
         }
     }
+
 }
