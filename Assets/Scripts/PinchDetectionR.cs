@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Leap.Unity;
+using System;
 
 public class PinchDetectionR : MonoBehaviour
 {
@@ -25,7 +26,6 @@ public class PinchDetectionR : MonoBehaviour
 
     private bool togglePinch = false;
     protected Collider grabbedImage;
-    protected RigidbodyConstraints previousConstraints;
 
     // Use this for initialization
     void Start()
@@ -42,10 +42,6 @@ public class PinchDetectionR : MonoBehaviour
         float distance = (indexPos - thumbPos).magnitude;
         float normalizedDistance = (distance - minPinchDistance) / (maxPinchDistance - minPinchDistance);
         float pinch = 1.0f - Mathf.Clamp01(normalizedDistance);
-
-        //Debug.Log(distance + "  >>>>>>>   DISTANCE");
-        //Debug.Log(normalizedDistance + "  >>>>>>>   normDISTANCE");
-        //Debug.Log(">>>>>>>  "+handModel.GetLeapHand().PinchStrength);
 
         togglePinch = false;
 
@@ -69,22 +65,7 @@ public class PinchDetectionR : MonoBehaviour
 
         if (grabbedImage != null) {
             if(PinchDetectionL.isPinchingL) { // ensure both hands are pinching
-                grabbedImage.GetComponent<Rigidbody>().constraints = previousConstraints; // freeze position movement
-                Vector3 pinchDistance = pinchPosR - PinchDetectionL.pinchPosL;
-
-                pinchDistance = new Vector3(pinchDistance.x, pinchDistance.y, pinchDistance.z) * 0.03f;
-
-                if (pinchDistance.magnitude < prevPinchDistance.magnitude) {
-                    grabbedImage.GetComponent<Rigidbody>().transform.localScale -= pinchDistance;
-                }
-                else {
-                    grabbedImage.GetComponent<Rigidbody>().transform.localScale += pinchDistance;
-                }
-
-                Debug.Log(pinchPosR + ">>>>>>>>>>>>>>>>>>>>>" + previousPinchPosR);
-                Debug.Log(PinchDetectionL.pinchPosL+"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" + PinchDetectionL.previousPinchPosL);
-
-                prevPinchDistance = pinchDistance;
+                scaleImage();
             }
             else {
                 //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
@@ -103,6 +84,19 @@ public class PinchDetectionR : MonoBehaviour
         //}
     }
 
+    private void scaleImage() {
+        Renderer rend = grabbedImage.GetComponent<Renderer>();
+        grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;    
+
+        float newX =  Mathf.Abs(pinchPosR.x - PinchDetectionL.pinchPosL.x);
+        float newY = Mathf.Abs(pinchPosR.y - PinchDetectionL.pinchPosL.y);
+
+
+        grabbedImage.GetComponent<Rigidbody>().transform.localScale = new Vector3(newX, newY, 1.0f);
+
+
+    }
+
     // This function frees the constraints so the image can be moved around and rotated
     // but then freeze rotation so we don't rotate it while moving
     // RigibodyConstraints API has no support for only freeing the position so we have 
@@ -116,8 +110,7 @@ public class PinchDetectionR : MonoBehaviour
     void OnReleasePinch()
     {
         if (grabbedImage != null) {
-            //grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll; // freeze all (position and rotation)   
-            grabbedImage.GetComponent<Rigidbody>().constraints = previousConstraints; //we can get rid of this if we don't want other things in the world that use gravity
+            grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll; // freeze all (position and rotation)   
         }
         //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
         grabbedImage = null;
@@ -137,12 +130,8 @@ public class PinchDetectionR : MonoBehaviour
             Vector3 newDistance = pinchPosR - nearImages[i].transform.position;
             if (nearImages[i].GetComponent<Rigidbody>() != null && newDistance.magnitude < dist.magnitude && !nearImages[i].transform.IsChildOf(transform))
             {
-                //Debug.Log("NEAR IMAGE >>>> " +nearImages[i].ToString());
-                //Debug.Log("pinchPosR >>>> " + pinchPosR);
-                Debug.Log("ImagePos >>>> " + nearImages[i].gameObject.name);
                 grabbedImage = nearImages[i];
                 dist = newDistance;
-                previousConstraints = grabbedImage.GetComponent<Rigidbody>().constraints; // only use this for things like cubes in the world otherwise just RigidbodyConstraints.FreezeAll;
             }
         }
     }
