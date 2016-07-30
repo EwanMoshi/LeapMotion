@@ -9,7 +9,7 @@ public class InteractableObject : MonoBehaviour {
     enum Hands {None, Left, Right, Both};
     Hands hands;
     
-    Vector3 origin = new Vector3(0,0,-10);
+    Vector3 origin = new Vector3(-50,-50,-10);
     
     Vector3 hand1;
     Vector3 hand2;

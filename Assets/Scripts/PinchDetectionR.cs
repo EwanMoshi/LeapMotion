@@ -27,13 +27,15 @@ public class PinchDetectionR : MonoBehaviour
     private Vector3 prevPinchDistance;
     
     public float pinchDepth = 1;
-    Vector3 z = new Vector3(0,0,1);
+    //Vector3 z = new Vector3(0,0,1);
     Vector3 origin = new Vector3(0,0,-10);
-    int layerMask = 1 << 0;
+    int layerMask = 1 << 9;
     Vector3 pos;
     public enum Handedness {Left, Right};
     public Handedness handedness;
     int id = 0;
+    Vector3 cameraOffset = new Vector3(-50,-50,0);
+    
     
     InteractableObject targetImage;
 
@@ -45,6 +47,7 @@ public class PinchDetectionR : MonoBehaviour
     {
         handModel = transform.GetComponent<HandModel>(); //transform.GetComponent<HandModel>();
         id = (int)handedness;
+        origin += cameraOffset;
     }
 
     // Update is called once per frame
@@ -55,7 +58,7 @@ public class PinchDetectionR : MonoBehaviour
 
         float distance = (indexPos - thumbPos).magnitude;
         float normalizedDistance = (distance - minPinchDistance) / (maxPinchDistance - minPinchDistance);
-        float pinch = 1.0f - Mathf.Clamp01(normalizedDistance);
+        //float pinch = 1.0f - Mathf.Clamp01(normalizedDistance);
 
         togglePinch = false;
 
@@ -68,6 +71,7 @@ public class PinchDetectionR : MonoBehaviour
         // store position of the pinch (at thumb)
         //pinchPosR = handModel.fingers[0].GetTipPosition();
         pos = handModel.fingers[0].GetTipPosition();
+        pos += cameraOffset;
 
         if (togglePinch && !isPinchingR)
         {
@@ -156,6 +160,7 @@ public class PinchDetectionR : MonoBehaviour
         //Raycast from pinch position along the +z axis
         RaycastHit hit;
         Physics.Raycast(origin, pos-origin, out hit, pinchDepth, layerMask);        
+        if (hit.collider != null) { Debug.Log("Hit: " + hit.collider.name); }
         
         if (hit.collider != null) {
             //Hit an image, do something...

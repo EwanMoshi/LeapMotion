@@ -9,7 +9,7 @@ public class SelectImage : MonoBehaviour {
 	
     void Start() {
         rt = GetComponent<RectTransform>();
-        canvasRT = GameObject.Find("CanvasSlider").GetComponent<RectTransform>();
+        canvasRT = GameObject.Find("GalleryUI").GetComponent<RectTransform>();
         highlight = transform.Find("Highlight").gameObject;
     }
     
