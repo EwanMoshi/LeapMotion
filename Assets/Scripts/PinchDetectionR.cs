@@ -5,6 +5,8 @@ using System;
 
 public class PinchDetectionR : MonoBehaviour
 {
+    
+    public bool DebugSpam = false;
 
     [SerializeField]
     private float maxPinchDistance;
@@ -23,6 +25,16 @@ public class PinchDetectionR : MonoBehaviour
     public static Vector3 pinchPosR;
     public static Vector3 previousPinchPosR = new Vector3(0.0f, 0.0f, 0.0f);
     private Vector3 prevPinchDistance;
+    
+    public float pinchDepth = 1;
+    Vector3 z = new Vector3(0,0,1);
+    Vector3 origin = new Vector3(0,0,-10);
+    int layerMask = 1 << 0;
+    Vector3 pos;
+    public enum Handedness {Left, Right};
+    public Handedness handedness;
+    
+    InteractableObject targetImage;
 
     private bool togglePinch = false;
     protected Collider grabbedImage;
@@ -52,37 +64,49 @@ public class PinchDetectionR : MonoBehaviour
         }
 
         // store position of the pinch (at thumb)
-        pinchPosR = handModel.fingers[0].GetTipPosition();
+        //pinchPosR = handModel.fingers[0].GetTipPosition();
+        pos = handModel.fingers[0].GetTipPosition();
 
         if (togglePinch && !isPinchingR)
         {
-            OnPinch(pinchPosR);
+            //OnPinch(pinchPosR);
+            OnPinch(pos);
         }
         else if (!togglePinch && isPinchingR)
         {
             OnReleasePinch();
         }
-
-        if (grabbedImage != null) {
+        
+        if (targetImage != null) {
+            //Dragging an image
+            targetImage.Drag(pos);
+            
+            
+        }
+        
+        /* if (grabbedImage != null) {
             if(PinchDetectionL.isPinchingL) { // ensure both hands are pinching
                 scaleImage();
             }
             else {
+                
                 //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
                 //Debug.Log("Something has been grabbed");
-                FreePositionFreezeRotation();
-                Vector3 moveDistance = pinchPosR - grabbedImage.transform.position;
+                //FreePositionFreezeRotation();
+                //Vector3 moveDistance = pinchPosR - grabbedImage.transform.position;
                 //Debug.Log("moveDistance >>>>  "+moveDistance);
                 //Debug.Log("force >>>>> " + force * moveDistance);
-                grabbedImage.GetComponent<Rigidbody>().AddForce(force * moveDistance);
+                //grabbedImage.GetComponent<Rigidbody>().AddForce(force * moveDistance);
             }
-        }
+        } */
 
         //if(grabbedImage != null) {
         //Debug.Log(grabbedImage.ToString());
         //Debug.Log("grabbed");
         //}
     }
+    
+    
 
     private void scaleImage() {
         Renderer rend = grabbedImage.GetComponent<Renderer>();
@@ -109,18 +133,36 @@ public class PinchDetectionR : MonoBehaviour
 
     void OnReleasePinch()
     {
-        if (grabbedImage != null) {
-            grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll; // freeze all (position and rotation)   
-        }
-        //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
-        grabbedImage = null;
         isPinchingR = false;
+        targetImage = null;
+        
+        //if (grabbedImage != null) {
+        //    grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll; // freeze all (position and rotation)   
+        //}
+        //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
+        //grabbedImage = null;
+        //isPinchingR = false;
         //Debug.Log("ReleasePinch");
     }
 
-    void OnPinch(Vector3 pinchPosR)
+    void OnPinch(Vector3 pos)
     {
+        //Raycast from pinch position along the +z axis
+        RaycastHit hit;
+        Physics.Raycast(origin, pos-origin, out hit, pinchDepth, layerMask);
+        if (DebugSpam) {
+            if (hit.collider != null) { Debug.Log("Hit: " + hit.collider.name); }
+        }        
+        
+        if (hit.collider != null) {
+            //Hit an image, do something...
+            targetImage = hit.collider.gameObject.GetComponent<InteractableObject>();
+            targetImage.Pinch(pos);
+        }
         isPinchingR = true;
+        
+        
+        /* isPinchingR = true;
         //Debug.Log("OnPinch");
         Collider[] nearImages = Physics.OverlapSphere(pinchPosR, magnetDistance);
         Vector3 dist = new Vector3(magnetDistance, 0.0f, 0.0f);
@@ -133,6 +175,6 @@ public class PinchDetectionR : MonoBehaviour
                 grabbedImage = nearImages[i];
                 dist = newDistance;
             }
-        }
+        } */
     }
 }
