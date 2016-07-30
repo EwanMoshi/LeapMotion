@@ -12,7 +12,7 @@ public class PinchDetectionR : MonoBehaviour
     private float maxPinchDistance;
     [SerializeField]
     private float minPinchDistance;
-    [SerializeField]
+    //[SerializeField]
     private float pinchStart;
 
     private HandModel handModel;
@@ -21,9 +21,9 @@ public class PinchDetectionR : MonoBehaviour
     public float force = 50.0f;
     public float magnetDistance = 0.05f;
 
-    public static bool isPinchingR = false;
-    public static Vector3 pinchPosR;
-    public static Vector3 previousPinchPosR = new Vector3(0.0f, 0.0f, 0.0f);
+    public bool isPinchingR = false;
+    public Vector3 pinchPosR;
+    public Vector3 previousPinchPosR = new Vector3(0.0f, 0.0f, 0.0f);
     private Vector3 prevPinchDistance;
     
     public float pinchDepth = 1;
@@ -33,6 +33,7 @@ public class PinchDetectionR : MonoBehaviour
     Vector3 pos;
     public enum Handedness {Left, Right};
     public Handedness handedness;
+    int id = 0;
     
     InteractableObject targetImage;
 
@@ -43,6 +44,7 @@ public class PinchDetectionR : MonoBehaviour
     void Start()
     {
         handModel = transform.GetComponent<HandModel>(); //transform.GetComponent<HandModel>();
+        id = (int)handedness;
     }
 
     // Update is called once per frame
@@ -69,7 +71,6 @@ public class PinchDetectionR : MonoBehaviour
 
         if (togglePinch && !isPinchingR)
         {
-            //OnPinch(pinchPosR);
             OnPinch(pos);
         }
         else if (!togglePinch && isPinchingR)
@@ -79,9 +80,8 @@ public class PinchDetectionR : MonoBehaviour
         
         if (targetImage != null) {
             //Dragging an image
-            targetImage.Drag(pos);
-            
-            
+            //Debug.Log("dragging: " + id);
+            targetImage.Drag(pos,id);
         }
         
         /* if (grabbedImage != null) {
@@ -109,7 +109,7 @@ public class PinchDetectionR : MonoBehaviour
     
 
     private void scaleImage() {
-        Renderer rend = grabbedImage.GetComponent<Renderer>();
+        //Renderer rend = grabbedImage.GetComponent<Renderer>();
         grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;    
 
         float newX =  Mathf.Abs(pinchPosR.x - PinchDetectionL.pinchPosL.x);
@@ -133,8 +133,13 @@ public class PinchDetectionR : MonoBehaviour
 
     void OnReleasePinch()
     {
+        //Debug.Log("Release: " + id);
         isPinchingR = false;
-        targetImage = null;
+        if (targetImage != null) {
+            targetImage.ReleasePinch(id);
+            targetImage = null;
+        }
+        
         
         //if (grabbedImage != null) {
         //    grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll; // freeze all (position and rotation)   
@@ -147,17 +152,15 @@ public class PinchDetectionR : MonoBehaviour
 
     void OnPinch(Vector3 pos)
     {
+        //Debug.Log("Pinch: " + id);
         //Raycast from pinch position along the +z axis
         RaycastHit hit;
-        Physics.Raycast(origin, pos-origin, out hit, pinchDepth, layerMask);
-        if (DebugSpam) {
-            if (hit.collider != null) { Debug.Log("Hit: " + hit.collider.name); }
-        }        
+        Physics.Raycast(origin, pos-origin, out hit, pinchDepth, layerMask);        
         
         if (hit.collider != null) {
             //Hit an image, do something...
             targetImage = hit.collider.gameObject.GetComponent<InteractableObject>();
-            targetImage.Pinch(pos);
+            targetImage.Pinch(pos, id);            
         }
         isPinchingR = true;
         
