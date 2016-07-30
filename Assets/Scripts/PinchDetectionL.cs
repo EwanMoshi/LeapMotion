@@ -63,9 +63,10 @@ public class PinchDetectionL : MonoBehaviour {
 
         if (grabbedImage != null) {
             if (PinchDetectionR.isPinchingR) { // ensure both hands are pinching
+                grabbedImage.GetComponent<Rigidbody>().constraints = previousConstraints; // freeze position movement
                 Vector3 pinchDistance = pinchPosL - PinchDetectionR.pinchPosR;
 
-                pinchDistance = new Vector3(pinchDistance.x, pinchDistance.y, pinchDistance.z) * 0.01f;
+                pinchDistance = new Vector3(pinchDistance.x, pinchDistance.y, pinchDistance.z) * 0.03f;
 
                 if (pinchDistance.magnitude < prevPinchDistance.magnitude)
                 {
