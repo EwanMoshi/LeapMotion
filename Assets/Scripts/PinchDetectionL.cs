@@ -62,7 +62,7 @@ public class PinchDetectionL : MonoBehaviour {
         }
 
         if (grabbedImage != null) {
-            if (PinchDetectionR.isPinchingR) { // ensure both hands are pinching
+            if (PinchDetectionR.isPinchingR) { // if right hand is also pinching, then we need to scale the image
                 grabbedImage.GetComponent<Rigidbody>().constraints = previousConstraints; // freeze position movement
                 Vector3 pinchDistance = pinchPosL - PinchDetectionR.pinchPosR;
 
@@ -77,26 +77,16 @@ public class PinchDetectionL : MonoBehaviour {
                     grabbedImage.GetComponent<Rigidbody>().transform.localScale += pinchDistance;
                 }
 
-                Debug.Log(pinchPosL + ">>>>>>>>>>>>>>>>>>>>>" + previousPinchPosL);
-                Debug.Log(PinchDetectionL.pinchPosL + "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" + PinchDetectionL.previousPinchPosL);
-
                 prevPinchDistance = pinchDistance;
             }
-            else {
-                //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
-                //Debug.Log("Something has been grabbed");
+            else { // if just this hand (L) is pinching, we only move image around
+
                 FreePositionFreezeRotation();
                 Vector3 moveDistance = pinchPosL - grabbedImage.transform.position;
-                //Debug.Log("moveDistance >>>>  "+moveDistance);
-                //Debug.Log("force >>>>> " + force * moveDistance);
+
                 grabbedImage.GetComponent<Rigidbody>().AddForce(force * moveDistance);
             }
         }
-       
-        //if(grabbedImage != null) {
-           //Debug.Log(grabbedImage.ToString());
-           //Debug.Log("grabbed");
-        //}
     }
 
     // This function frees the constraints so the image can be moved around and rotated
