@@ -193,19 +193,19 @@ public class InteractableObject : MonoBehaviour {
     public void Rotate(Vector3 pos, int id)
     {
         Vector3 dragStart;
-        if (id == 0)
-        {
+        if (id == 0) {
             if (hands == Hands.None || hands == Hands.Right) { return; }
             dragStart = hand1;
             hand1 = pos;
         }
-        else
-        {
+        else {
             if (hands == Hands.None || hands == Hands.Left) { return; }
             dragStart = hand2;
             hand2 = pos;
         }
-        if (pos == dragStart) { return; }
+        if (pos == dragStart) {
+            return;
+        }
 
         // find out why it rotates although hand hasn't moved
         Debug.Log("pos >>>>    " + pos + " >>>>  dragStart >>>>    " + dragStart);
@@ -227,7 +227,9 @@ public class InteractableObject : MonoBehaviour {
 
         if (hands != Hands.Both) {
 
-            dragDistance = dragDistance * 0.1f; // scale down the rotation or else rotation is crazy
+            dragDistance = dragDistance * 0.1f; // scale down the rotation or else rotation is crazy 
+                                                // I feel like this makes no difference sometimes
+
             Quaternion toRotation = Quaternion.FromToRotation(transform.right, dragDistance);
 
             //toRotation = Quaternion.Euler(-toRotation.x, -toRotation.y, -toRotation.z);
