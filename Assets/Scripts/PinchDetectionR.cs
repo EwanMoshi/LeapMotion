@@ -59,13 +59,20 @@ public class PinchDetectionR : MonoBehaviour
 
         togglePinch = false;
         isPointing = false;
-        Debug.Log("Not Pointing");
 
-        if (calculatePointing())
+        if (targetImage != null ) // only perform pointing check if we have something grabbed already
         {
-            isPointing = true;
-            Debug.Log(" Pointing");
+            if (calculatePointing())
+            {
+                isPointing = true;
+                //OnPoint();
+            }
+            //else
+            //{
+            //    targetImage.OnReleasePoint(id);
+            //}
         }
+        
 
         // check if the user has successfully pinched an image and toggle pinching if they have
         if (handModel.GetLeapHand().PinchStrength > pinchStart)
@@ -86,11 +93,17 @@ public class PinchDetectionR : MonoBehaviour
         {
             OnReleasePinch();
         }
-        
+
+
         if (targetImage != null) {
-            //Dragging an image
-            //Debug.Log("dragging: " + id);
-            targetImage.Drag(pos,id);
+            if (isPointing) {
+                targetImage.Rotate(pos, id);
+            }
+            else {
+                //Dragging an image
+                //Debug.Log("dragging: " + id);
+                targetImage.Drag(pos, id);
+            }
         }
         
         /* if (grabbedImage != null) {
@@ -136,6 +149,11 @@ public class PinchDetectionR : MonoBehaviour
     {
         grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
         grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
+    }
+    
+    void OnPoint()
+    {
+        //targetImage.OnPoint(id);
     }
 
     void OnReleasePinch()
@@ -197,7 +215,6 @@ public class PinchDetectionR : MonoBehaviour
         Vector3 pinkyDirection = handModel.fingers[4].GetBoneDirection(3);
 
         if (indexDirection.z >= 0.8 && middleDirection.z < 0.8 && ringDirection.z < 0.8 && pinkyDirection.z < 0.8) {
-            Debug.Log("Pointing");
             return true;
         }
         else {

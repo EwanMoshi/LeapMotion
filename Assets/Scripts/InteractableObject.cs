@@ -78,7 +78,7 @@ public class InteractableObject : MonoBehaviour {
         }
     }
     
-    public void Pinch(Vector3 pos, int id) {        
+    public void Pinch(Vector3 pos, int id) {
         //Start dragging - Calculate grabbed location offset
         if (id == 0) {
             if (hands == Hands.None) { hands = Hands.Left; }
@@ -101,6 +101,46 @@ public class InteractableObject : MonoBehaviour {
         }
     }
     
+    //// set which hand we pointed with
+    //public void OnPoint(int id) {
+    //    if (id == 0) {
+    //        if (hands == Hands.None) {
+    //            hands = Hands.Left;
+    //        }
+    //        else if (hands == Hands.Right) {
+    //            hands = Hands.Both;
+    //        }
+    //    }
+    //    else {
+    //        if (hands == Hands.None) {
+    //            hands = Hands.Right;
+    //        }
+    //        else if (hands == Hands.Left) {
+    //            hands = Hands.Both;
+    //        }
+    //    }
+    //}
+
+    //// release the pointing hand
+    //public void OnReleasePoint(int id) { 
+    //    if (id == 0) { //if left hand
+    //        if (hands == Hands.Left) {
+    //            hands = Hands.None;
+    //        }
+    //        else if (hands == Hands.Both) {
+    //            hands = Hands.Right;
+    //        }
+    //    }
+    //    else { // else if it was the right hand
+    //        if (hands == Hands.Right) {
+    //            hands = Hands.None;
+    //        }
+    //        else if (hands == Hands.Both) {
+    //            hands = Hands.Left;
+    //        }
+    //    }
+    //}
+
     public void Drag(Vector3 pos, int id) {
         //Debug.Log("Hands: " + hands);
         Vector3 dragStart;
@@ -114,7 +154,7 @@ public class InteractableObject : MonoBehaviour {
             hand2 = pos;
         }
         if (pos == dragStart) { return; }
-        
+
         //Project both positions onto the same xy axis at the z location of the image
         Vector3 posMod = pos - origin;
         float zDif = (img.position - origin).z / posMod.z;    
@@ -150,10 +190,8 @@ public class InteractableObject : MonoBehaviour {
             //img.localScale += new Vector3(dragDistance.x, dragDistance.y, 0);
         }
     }
-    
-    
-    
-    
-    
-    
+
+    public void Rotate(Vector3 pos, int id)
+    {
+    }
 }
