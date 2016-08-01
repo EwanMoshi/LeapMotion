@@ -224,14 +224,13 @@ public class InteractableObject : MonoBehaviour {
 
         if (hands != Hands.Both) {
 
-            dragDistance = dragDistance * 0.1f;
+            dragDistance = dragDistance * 0.1f; // scale down the rotation or else rotation is crazy
             Quaternion toRotation = Quaternion.FromToRotation(transform.right, dragDistance);
 
             //toRotation = Quaternion.Euler(-toRotation.x, -toRotation.y, -toRotation.z);
             img.rotation = Quaternion.Lerp(img.rotation, toRotation, 0.05f * Time.time);
 
-            Debug.Log("rotation >>>>    "+ img.rotation + "toRotation >>>>    " + toRotation);
-
+            Debug.Log("rotation >>>>    "+ img.rotation + " >>>>  toRotation >>>>    " + toRotation);
 
             //Debug.Log(img.rotation);     
         }
