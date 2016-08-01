@@ -35,11 +35,12 @@ public class PinchDetectionR : MonoBehaviour
     public Handedness handedness;
     int id = 0;
     Vector3 cameraOffset = new Vector3(-50,-50,0);
-    
-    
+
     InteractableObject targetImage;
 
     private bool togglePinch = false;
+    private bool isPointing = false;
+
     protected Collider grabbedImage;
 
     // Use this for initialization
@@ -56,11 +57,15 @@ public class PinchDetectionR : MonoBehaviour
         Vector3 thumbPos = handModel.fingers[0].GetBoneCenter(3);
         Vector3 indexPos = handModel.fingers[1].GetBoneCenter(3);
 
-        float distance = (indexPos - thumbPos).magnitude;
-        float normalizedDistance = (distance - minPinchDistance) / (maxPinchDistance - minPinchDistance);
-        //float pinch = 1.0f - Mathf.Clamp01(normalizedDistance);
-
         togglePinch = false;
+        isPointing = false;
+        Debug.Log("Not Pointing");
+
+        if (calculatePointing())
+        {
+            isPointing = true;
+            Debug.Log(" Pointing");
+        }
 
         // check if the user has successfully pinched an image and toggle pinching if they have
         if (handModel.GetLeapHand().PinchStrength > pinchStart)
@@ -109,8 +114,6 @@ public class PinchDetectionR : MonoBehaviour
         //Debug.Log("grabbed");
         //}
     }
-    
-    
 
     private void scaleImage() {
         //Renderer rend = grabbedImage.GetComponent<Renderer>();
@@ -185,4 +188,23 @@ public class PinchDetectionR : MonoBehaviour
             }
         } */
     }
+
+    private bool calculatePointing()
+    {
+        Vector3 indexDirection = handModel.fingers[1].GetBoneDirection(3);
+        Vector3 middleDirection = handModel.fingers[2].GetBoneDirection(3);
+        Vector3 ringDirection = handModel.fingers[3].GetBoneDirection(3);
+        Vector3 pinkyDirection = handModel.fingers[4].GetBoneDirection(3);
+
+        if (indexDirection.z >= 0.8 && middleDirection.z < 0.8 && ringDirection.z < 0.8 && pinkyDirection.z < 0.8) {
+            Debug.Log("Pointing");
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+
+
 }
