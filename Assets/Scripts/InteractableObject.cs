@@ -224,7 +224,7 @@ public class InteractableObject : MonoBehaviour {
 
         if (hands != Hands.Both) {
 
-            //dragDistance = dragDistance * 0.1f;
+            dragDistance = dragDistance * 0.1f;
             Quaternion toRotation = Quaternion.FromToRotation(transform.right, dragDistance);
 
             //toRotation = Quaternion.Euler(-toRotation.x, -toRotation.y, -toRotation.z);
