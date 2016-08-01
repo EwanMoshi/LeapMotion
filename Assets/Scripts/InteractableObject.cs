@@ -207,6 +207,9 @@ public class InteractableObject : MonoBehaviour {
         }
         if (pos == dragStart) { return; }
 
+        // find out why it rotates although hand hasn't moved
+        Debug.Log("pos >>>>    " + pos + " >>>>  dragStart >>>>    " + dragStart);
+
         //Project both positions onto the same xy axis at the z location of the image
         Vector3 posMod = pos - origin;
 
@@ -230,9 +233,8 @@ public class InteractableObject : MonoBehaviour {
             //toRotation = Quaternion.Euler(-toRotation.x, -toRotation.y, -toRotation.z);
             img.rotation = Quaternion.Lerp(img.rotation, toRotation, 0.05f * Time.time);
 
-            Debug.Log("rotation >>>>    "+ img.rotation + " >>>>  toRotation >>>>    " + toRotation);
-
-            //Debug.Log(img.rotation);     
+            //Debug.Log("rotation >>>>    "+ img.rotation + " >>>>  toRotation >>>>    " + toRotation);
+  
         }
     }
 }
