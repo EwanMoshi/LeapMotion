@@ -3,7 +3,6 @@ using System.Collections;
 
 public class InteractableObject : MonoBehaviour {
 
-
     public Transform img;
     
     enum Hands {None, Left, Right, Both};
@@ -193,5 +192,48 @@ public class InteractableObject : MonoBehaviour {
 
     public void Rotate(Vector3 pos, int id)
     {
+        Vector3 dragStart;
+        if (id == 0)
+        {
+            if (hands == Hands.None || hands == Hands.Right) { return; }
+            dragStart = hand1;
+            hand1 = pos;
+        }
+        else
+        {
+            if (hands == Hands.None || hands == Hands.Left) { return; }
+            dragStart = hand2;
+            hand2 = pos;
+        }
+        if (pos == dragStart) { return; }
+
+        //Project both positions onto the same xy axis at the z location of the image
+        Vector3 posMod = pos - origin;
+
+        float zDif = (img.position - origin).z / posMod.z;
+        posMod = posMod * zDif;
+
+        Vector3 startMod = dragStart - origin;
+        zDif = (img.position - origin).z / startMod.z;
+        startMod = startMod * zDif;
+
+        Vector3 dragDistance = posMod - startMod;
+
+        //Apply the z movement unscaled
+        dragDistance.z = pos.z - dragStart.z;
+
+        if (hands != Hands.Both) {
+
+            //dragDistance = dragDistance * 0.1f;
+            Quaternion toRotation = Quaternion.FromToRotation(transform.right, dragDistance);
+
+            //toRotation = Quaternion.Euler(-toRotation.x, -toRotation.y, -toRotation.z);
+            img.rotation = Quaternion.Lerp(img.rotation, toRotation, 0.05f * Time.time);
+
+            Debug.Log("rotation >>>>    "+ img.rotation + "toRotation >>>>    " + toRotation);
+
+
+            //Debug.Log(img.rotation);     
+        }
     }
 }
