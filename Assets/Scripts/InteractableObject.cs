@@ -5,9 +5,12 @@ public class InteractableObject : MonoBehaviour {
 
     public Transform img;
     
-    enum Hands {None, Left, Right, Both};
+    enum Hands {None, Left, Right, Both, pointNone, pointLeft, pointRight, pointBoth};
     Hands hands;
-    
+    Hands pointingHands;
+
+
+
     Vector3 origin = new Vector3(-50,-50,-10);
     
     Vector3 hand1;
@@ -17,6 +20,7 @@ public class InteractableObject : MonoBehaviour {
     //Vector3 scaleChange;
     
     void Start() {
+        pointingHands = Hands.pointNone;
         if (img == null) {
             img = transform.parent.transform;
         }
@@ -99,46 +103,60 @@ public class InteractableObject : MonoBehaviour {
             else if (hands == Hands.Both) { hands = Hands.Left; }            
         }
     }
-    
-    //// set which hand we pointed with
-    //public void OnPoint(int id) {
-    //    if (id == 0) {
-    //        if (hands == Hands.None) {
-    //            hands = Hands.Left;
-    //        }
-    //        else if (hands == Hands.Right) {
-    //            hands = Hands.Both;
-    //        }
-    //    }
-    //    else {
-    //        if (hands == Hands.None) {
-    //            hands = Hands.Right;
-    //        }
-    //        else if (hands == Hands.Left) {
-    //            hands = Hands.Both;
-    //        }
-    //    }
-    //}
 
-    //// release the pointing hand
-    //public void OnReleasePoint(int id) { 
-    //    if (id == 0) { //if left hand
-    //        if (hands == Hands.Left) {
-    //            hands = Hands.None;
-    //        }
-    //        else if (hands == Hands.Both) {
-    //            hands = Hands.Right;
-    //        }
-    //    }
-    //    else { // else if it was the right hand
-    //        if (hands == Hands.Right) {
-    //            hands = Hands.None;
-    //        }
-    //        else if (hands == Hands.Both) {
-    //            hands = Hands.Left;
-    //        }
-    //    }
-    //}
+    // set which hand we pointed with
+    public void OnPoint(int id)
+    {
+           
+        //if (hands == Hands.Right && id == 1) { //if we're pinching with right hand and the point is with right hand
+        //    return;                           // do nothing
+        //}
+        //else if (hands == Hands.Left && id == 0) { //if we're pinching with left hand and the point is with left hand
+        //    return;                                // do nothing
+        //}
+
+        if (id == 0) { //if pointing with left hand
+            if (pointingHands == Hands.pointNone) {
+                pointingHands = Hands.pointLeft;
+            }
+            else if (pointingHands == Hands.pointRight) {
+                pointingHands = Hands.pointBoth;
+            }
+        }
+        else {
+            Debug.Log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   "+pointingHands);
+
+            if (pointingHands == Hands.pointNone) {
+                pointingHands = Hands.pointRight;
+            }
+            else if (pointingHands == Hands.pointLeft) {
+                pointingHands = Hands.pointBoth;
+            }
+            Debug.Log(">>>>>>>>>>>>   " + pointingHands);
+
+        }
+    }
+
+    // release the pointing hand
+    public void OnReleasePoint(int id) {
+        //Debug.Log("RELEASE POINT >>>>> " + id);
+        if (id == 0) { //if left hand
+            if (pointingHands == Hands.Left) {
+                pointingHands = Hands.None;
+            }
+            else if (pointingHands == Hands.Both) {
+                pointingHands = Hands.Right;
+            }
+        }
+        else { // else if it was the right hand
+            if (pointingHands == Hands.Right) {
+                pointingHands = Hands.None;
+            }
+            else if (pointingHands == Hands.Both) {
+                pointingHands = Hands.Left;
+            }
+        }
+    }
 
     public void Drag(Vector3 pos, int id) {
         //Debug.Log("Hands: " + hands);
@@ -190,8 +208,8 @@ public class InteractableObject : MonoBehaviour {
         }
     }
 
-    public void Rotate(Vector3 pos, int id)
-    {
+    public void Rotate(Vector3 pos, int id) {
+        Debug.Log(hands+ "    >>>>>>>>>     " + pointingHands);
         Vector3 dragStart;
         if (id == 0) {
             if (hands == Hands.None || hands == Hands.Right) { return; }
@@ -206,9 +224,6 @@ public class InteractableObject : MonoBehaviour {
         if (pos == dragStart) {
             return;
         }
-
-        // find out why it rotates although hand hasn't moved
-        Debug.Log("pos >>>>    " + pos + " >>>>  dragStart >>>>    " + dragStart);
 
         //Project both positions onto the same xy axis at the z location of the image
         Vector3 posMod = pos - origin;
@@ -225,7 +240,9 @@ public class InteractableObject : MonoBehaviour {
         //Apply the z movement unscaled
         dragDistance.z = pos.z - dragStart.z;
 
-        if (hands != Hands.Both) {
+        if (hands != Hands.Both && pointingHands != Hands.None) {
+
+            Debug.Log("We are pinching and pointing");
 
             dragDistance = dragDistance * 0.1f; // scale down the rotation or else rotation is crazy 
                                                 // I feel like this makes no difference sometimes

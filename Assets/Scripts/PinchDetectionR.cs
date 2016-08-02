@@ -60,22 +60,19 @@ public class PinchDetectionR : MonoBehaviour
         togglePinch = false;
         isPointing = false;
 
-        if (targetImage != null ) // only perform pointing check if we have something grabbed already
-        {
-            if (calculatePointing())
-            {
+        if (targetImage != null ) { // only perform pointing check if we have something grabbed already
+            if (calculatePointing()) {
                 isPointing = true;
-                //OnPoint();
+                targetImage.OnPoint(id);
             }
-            //else
-            //{
-            //    targetImage.OnReleasePoint(id);
-            //}
+            else {
+                targetImage.OnReleasePoint(id);
+            }
         }
         
 
         // check if the user has successfully pinched an image and toggle pinching if they have
-        if (handModel.GetLeapHand().PinchStrength > pinchStart)
+        if (handModel.GetLeapHand().PinchStrength > pinchStart) // make sure we're not pointing (because a point registers as a pinch at the moment)
         {
             togglePinch = true;
         }
@@ -150,14 +147,8 @@ public class PinchDetectionR : MonoBehaviour
         grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
         grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
     }
-    
-    void OnPoint()
-    {
-        //targetImage.OnPoint(id);
-    }
 
-    void OnReleasePinch()
-    {
+    void OnReleasePinch() {
         //Debug.Log("Release: " + id);
         isPinchingR = false;
         if (targetImage != null) {
@@ -181,7 +172,9 @@ public class PinchDetectionR : MonoBehaviour
         //Raycast from pinch position along the +z axis
         RaycastHit hit;
         Physics.Raycast(origin, pos-origin, out hit, pinchDepth, layerMask);        
-        if (hit.collider != null) { Debug.Log("Hit: " + hit.collider.name); }
+        if (hit.collider != null) { 
+            //Debug.Log("Hit: " + hit.collider.name); 
+        }
         
         if (hit.collider != null) {
             //Hit an image, do something...
