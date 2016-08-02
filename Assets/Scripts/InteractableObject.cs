@@ -124,16 +124,12 @@ public class InteractableObject : MonoBehaviour {
             }
         }
         else {
-            Debug.Log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   "+pointingHands);
-
             if (pointingHands == Hands.pointNone) {
                 pointingHands = Hands.pointRight;
             }
             else if (pointingHands == Hands.pointLeft) {
                 pointingHands = Hands.pointBoth;
             }
-            Debug.Log(">>>>>>>>>>>>   " + pointingHands);
-
         }
     }
 
@@ -209,7 +205,6 @@ public class InteractableObject : MonoBehaviour {
     }
 
     public void Rotate(Vector3 pos, int id) {
-        Debug.Log(hands+ "    >>>>>>>>>     " + pointingHands);
         Vector3 dragStart;
         if (id == 0) {
             if (hands == Hands.None || hands == Hands.Right) { return; }
@@ -242,15 +237,13 @@ public class InteractableObject : MonoBehaviour {
 
         if (hands != Hands.Both && pointingHands != Hands.None) {
 
-            Debug.Log("We are pinching and pointing");
-
-            dragDistance = dragDistance * 0.1f; // scale down the rotation or else rotation is crazy 
+            dragDistance = dragDistance * 0.05f; // scale down the rotation or else rotation is crazy 
                                                 // I feel like this makes no difference sometimes
 
             Quaternion toRotation = Quaternion.FromToRotation(transform.right, dragDistance);
 
             //toRotation = Quaternion.Euler(-toRotation.x, -toRotation.y, -toRotation.z);
-            img.rotation = Quaternion.Lerp(img.rotation, toRotation, 0.05f * Time.time);
+            img.rotation = Quaternion.Lerp(img.rotation, toRotation, 0.005f * Time.time);
 
             //Debug.Log("rotation >>>>    "+ img.rotation + " >>>>  toRotation >>>>    " + toRotation);
   
