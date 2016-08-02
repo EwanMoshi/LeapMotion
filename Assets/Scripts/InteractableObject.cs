@@ -245,8 +245,7 @@ public class InteractableObject : MonoBehaviour {
         if (hands != Hands.Both && pointingHands != Hands.None)
         {
 
-            dragDistance = dragDistance * 0.05f; // scale down the rotation or else rotation is crazy 
-                                                 // I feel like this makes no difference sometimes
+            dragDistance = dragDistance * 0.05f; 
 
             Quaternion toRotation = Quaternion.FromToRotation(transform.right, dragDistance);
 
