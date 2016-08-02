@@ -18,7 +18,8 @@ public class InteractableObject : MonoBehaviour {
     Vector3 drag1;
     Vector3 drag2;
     //Vector3 scaleChange;
-    
+
+
     void Start() {
         pointingHands = Hands.pointNone;
         if (img == null) {
@@ -105,7 +106,7 @@ public class InteractableObject : MonoBehaviour {
     }
 
     // set which hand we pointed with
-    public void OnPoint(int id)
+    public void OnPoint(Vector3 pos, int id)
     {
            
         //if (hands == Hands.Right && id == 1) { //if we're pinching with right hand and the point is with right hand
@@ -131,6 +132,7 @@ public class InteractableObject : MonoBehaviour {
                 pointingHands = Hands.pointBoth;
             }
         }
+
     }
 
     // release the pointing hand
@@ -204,19 +206,24 @@ public class InteractableObject : MonoBehaviour {
         }
     }
 
-    public void Rotate(Vector3 pos, int id) {
+
+    public void Rotate(Vector3 pos, int id)
+    {
         Vector3 dragStart;
-        if (id == 0) {
+        if (id == 0)
+        {
             if (hands == Hands.None || hands == Hands.Right) { return; }
             dragStart = hand1;
             hand1 = pos;
         }
-        else {
+        else
+        {
             if (hands == Hands.None || hands == Hands.Left) { return; }
             dragStart = hand2;
             hand2 = pos;
         }
-        if (pos == dragStart) {
+        if (pos == dragStart)
+        {
             return;
         }
 
@@ -235,10 +242,11 @@ public class InteractableObject : MonoBehaviour {
         //Apply the z movement unscaled
         dragDistance.z = pos.z - dragStart.z;
 
-        if (hands != Hands.Both && pointingHands != Hands.None) {
+        if (hands != Hands.Both && pointingHands != Hands.None)
+        {
 
             dragDistance = dragDistance * 0.05f; // scale down the rotation or else rotation is crazy 
-                                                // I feel like this makes no difference sometimes
+                                                 // I feel like this makes no difference sometimes
 
             Quaternion toRotation = Quaternion.FromToRotation(transform.right, dragDistance);
 
@@ -246,7 +254,7 @@ public class InteractableObject : MonoBehaviour {
             img.rotation = Quaternion.Lerp(img.rotation, toRotation, 0.005f * Time.time);
 
             //Debug.Log("rotation >>>>    "+ img.rotation + " >>>>  toRotation >>>>    " + toRotation);
-  
+
         }
     }
 }

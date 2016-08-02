@@ -57,13 +57,18 @@ public class PinchDetectionR : MonoBehaviour
         Vector3 thumbPos = handModel.fingers[0].GetBoneCenter(3);
         Vector3 indexPos = handModel.fingers[1].GetBoneCenter(3);
 
+        // store position of the pinch (at thumb)
+        //pinchPosR = handModel.fingers[0].GetTipPosition();
+        pos = handModel.fingers[0].GetTipPosition();
+        pos += cameraOffset;
+
         togglePinch = false;
         isPointing = false;
 
         if (targetImage != null ) { // only perform pointing check if we have something grabbed already
             if (calculatePointing()) {
                 isPointing = true;
-                targetImage.OnPoint(id);
+                targetImage.OnPoint(pos, id);
             }
             else {
                 targetImage.OnReleasePoint(id);
@@ -77,10 +82,7 @@ public class PinchDetectionR : MonoBehaviour
             togglePinch = true;
         }
 
-        // store position of the pinch (at thumb)
-        //pinchPosR = handModel.fingers[0].GetTipPosition();
-        pos = handModel.fingers[0].GetTipPosition();
-        pos += cameraOffset;
+
 
         if (togglePinch && !isPinchingR)
         {
