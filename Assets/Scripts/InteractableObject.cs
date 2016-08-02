@@ -242,18 +242,12 @@ public class InteractableObject : MonoBehaviour {
         //Apply the z movement unscaled
         dragDistance.z = pos.z - dragStart.z;
 
-        if (hands != Hands.Both && pointingHands != Hands.None)
-        {
-
+        if (hands != Hands.Both && pointingHands != Hands.None) {
             dragDistance = dragDistance * 0.05f; 
 
             Quaternion toRotation = Quaternion.FromToRotation(transform.right, dragDistance);
 
-            //toRotation = Quaternion.Euler(-toRotation.x, -toRotation.y, -toRotation.z);
             img.rotation = Quaternion.Lerp(img.rotation, toRotation, 0.005f * Time.time);
-
-            //Debug.Log("rotation >>>>    "+ img.rotation + " >>>>  toRotation >>>>    " + toRotation);
-
         }
     }
 }
