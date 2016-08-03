@@ -5,53 +5,31 @@ using System;
 
 public class PinchDetectionR : MonoBehaviour
 {
-    
-    public bool DebugSpam = false;
-    
-    public PinchDetectionR otherHand;
-
-    [SerializeField]
-    private float maxPinchDistance;
-    [SerializeField]
-    private float minPinchDistance;
-    //[SerializeField]
-    private float pinchStart = 0.5f;
-
-    private HandModel handModel;
-    private HandDrop hand;
-
-    public float force = 50.0f;
-    public float magnetDistance = 0.05f;
-
-    public bool isPinching = false;
-    public Vector3 pinchPosR;
-    public Vector3 previousPinchPosR = new Vector3(0.0f, 0.0f, 0.0f);
-    private Vector3 prevPinchDistance;
-    
-    public float pinchDepth = 1;
-    //Vector3 z = new Vector3(0,0,1);
-    Vector3 origin = new Vector3(0,0,-10);
-    int layerMask = 1 << 9;
-    Vector3 pos;
+    public PinchDetector pcd;
+    public ExtendedFingerDetector efd;
     public enum Handedness {Left, Right};
-    public Handedness handedness;
-    int id = 0;
-    Vector3 cameraOffset = new Vector3(-50,-50,0);
-
-    InteractableObject targetImage;
+    public Handedness handedness;    
+    public HandModel handModel;
     
+    bool isPinching = false;
+    bool isPointing = false;    
+    
+    Vector3 cameraOffset = new Vector3(-50,-50,0);
+    Vector3 origin = new Vector3(0,0,-10);
+    Vector3 pos;
+    
+    int layerMask = 1 << 9;
     int pointTimer = 10;
     int pointCounter;
+    int id = 0;
+    float pinchStart = 0.5f;
+    float pinchDepth = 50;
 
-    private bool togglePinch = false;
-    private bool isPointing = false;
+    InteractableObject targetImage;
 
-    protected Collider grabbedImage;
-
-    // Use this for initialization
+    
     void Start()
     {
-        handModel = transform.GetComponent<HandModel>(); //transform.GetComponent<HandModel>();
         id = (int)handedness;
         origin += cameraOffset;
     }
@@ -61,7 +39,12 @@ public class PinchDetectionR : MonoBehaviour
     {
         //Vector3 thumbPos = handModel.fingers[0].GetBoneCenter(3);
         //Vector3 indexPos = handModel.fingers[1].GetBoneCenter(3);
-
+        //Debug.Log("Tracked: " + handModel.IsTracked);
+        //if (!handModel.IsTracked) {
+        //    ReleasePoint(true);
+        //    ReleasePinch(true);
+        //}
+        
         // store position of the pinch (at thumb)        
         pos = handModel.fingers[0].GetTipPosition();
         pos += cameraOffset;
@@ -89,18 +72,25 @@ public class PinchDetectionR : MonoBehaviour
         if (targetImage == null) { return; }
         
                 
-        if (pointFrame || pointCounter < pointTimer) {
-            if (!pointFrame) { pointCounter++; }
+        if (pointFrame) {// || pointCounter < pointTimer) {
+            //if (!pointFrame) { pointCounter++; }
             Point(pos);
         } else if (pinchFrame) {
             Pinch(pos);
         }
+    }
+    
+    void OnDisable() {
+        ReleasePoint(true);
+        ReleasePinch(true);
     }
         
     void Point(Vector3 pos) {
         //Cancel pinch if active
         if (isPinching) {
             ReleasePinch(false);
+            FindImage(pos);
+            if (targetImage == null) { return; }
         }        
         
         if (!isPointing) {
@@ -141,6 +131,8 @@ public class PinchDetectionR : MonoBehaviour
     void Pinch(Vector3 pos) {        
         if (isPointing) {
             ReleasePoint(false);
+            FindImage(pos);
+            if (targetImage == null) { return; }
         }
         
         if (!isPinching) {
@@ -156,12 +148,13 @@ public class PinchDetectionR : MonoBehaviour
             targetImage.Drag(pos, id);
         }
     }   
-        
+    
     
     bool CalculatePinching() {
         // make sure we're not pointing (because a point registers as a pinch at the moment)
-        if (handModel.GetLeapHand().PinchStrength > pinchStart) { return true; }
-        return false;
+        //if (handModel.GetLeapHand().PinchStrength > pinchStart) { return true; }
+        
+        return pcd.IsPinching;
     }
     
     //Used by pinching finger to get image - obsolete atm
@@ -184,13 +177,14 @@ public class PinchDetectionR : MonoBehaviour
 
     private bool CalculatePointing()
     {
+        //return efd.IsPointed();
         Vector3 indexDirection = handModel.fingers[1].GetBoneDirection(3);
         Vector3 middleDirection = handModel.fingers[2].GetBoneDirection(3);
         Vector3 ringDirection = handModel.fingers[3].GetBoneDirection(3);
         Vector3 pinkyDirection = handModel.fingers[4].GetBoneDirection(3);
 
         //Leap seems to like pointing with index and middle for some reason
-        if (indexDirection.z >= 0.8 /* && middleDirection.z < 0.8 */ && ringDirection.z < 0.8 && pinkyDirection.z < 0.8) {
+        if (indexDirection.z >= 0.8  && middleDirection.z < 0.8  && ringDirection.z < 0.8 && pinkyDirection.z < 0.8) {
             return true;
         }
         else {

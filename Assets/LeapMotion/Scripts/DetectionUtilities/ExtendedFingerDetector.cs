@@ -61,6 +61,29 @@ namespace Leap.Unity {
       StopCoroutine(watcherCoroutine);
       Deactivate();
     }
+    
+    public bool IsPointed() {
+        Hand hand;
+      
+        bool fingerState = false;
+        if (HandModel != null && HandModel.IsTracked){
+            hand = HandModel.GetLeapHand();
+            if(hand != null){
+                fingerState = matchFingerState(hand.Fingers[0], 0)
+                && matchFingerState(hand.Fingers[1], 1)
+                && matchFingerState(hand.Fingers[2], 2)
+                && matchFingerState(hand.Fingers[3], 3)
+                && matchFingerState(hand.Fingers[4], 4);
+                if(HandModel.IsTracked && fingerState){
+                    return true;
+                }
+            }
+        }
+        return false;        
+    }
+    
+    
+    
   
     IEnumerator extendedFingerWatcher() {
       Hand hand;
@@ -113,22 +136,7 @@ namespace Leap.Unity {
              (requiredState == PointingState.NotExtended && !finger.IsExtended);
     }
 
-    #if UNITY_EDITOR
-    void OnDrawGizmos () {
-      if (ShowGizmos && HandModel != null) {
-        Hand hand = HandModel.GetLeapHand();
-        for (int f = 0; f < 5; f++) {
-          Finger finger = hand.Fingers[f];
-          if (matchFingerState(finger, f)) {
-            Gizmos.color = Color.green;
-          } else {
-            Gizmos.color = Color.red;
-          }
-          Gizmos.DrawWireSphere(finger.TipPosition.ToVector3(), finger.Width);
-        }
-      }
-    }
-    #endif
+    
   }
   
   /** Defines the settings for comparing extended finger states */

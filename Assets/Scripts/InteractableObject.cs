@@ -21,9 +21,9 @@ public class InteractableObject : MonoBehaviour {
     Vector3 drag2;
     Vector3 point;
     
-    float circleRadius;
-    float circleRadiusMin = 0.2f;
-    float distanceThresh = 0.2f;       //Acceptable distance from circle edge to still rotate
+    float circleRadius = 4;             //Max Radius before ignoring rotation
+    float circleRadiusMin = 0.2f;   
+    float distanceThresh = 0.2f;    //Acceptable distance from circle edge to still rotate
     float awayFramesLimit = 5;      //After this many frames reset circle radius
     float awayFrames;
     Queue angleHistory;
@@ -49,17 +49,17 @@ public class InteractableObject : MonoBehaviour {
     
     void Update() {
         //Delays scaling by 1 frame to possibly avoid conflicts between two hands?
-        //if (hands != Hands.None) { Debug.LogError("Hands: " + hands); }
+        if (hands != Hands.None) { Debug.Log("Hands: " + hands); }
         
         if (hands == Hands.Both) {
             //Attempt 2 at restricting scaling gestures:
             if (drag1.x >= 0 && drag2.x >= 0 || drag1.x < 0 && drag2.x < 0) { drag1.x = drag2.x = 0; }
-            if (drag1.y >= 0 && drag2.y >= 0 || drag1.y < 0 && drag2.y < 0) { drag1.y = drag2.y = 0; }            
+            if (drag1.y >= 0 && drag2.y >= 0 || drag1.y < 0 && drag2.y < 0) { drag1.y = drag2.y = 0; }
             if (drag1.x == 0 && drag2.x == 0 && drag1.y == 0 && drag2.y == 0) { return; }
             
             float c1 = Mathf.Abs(drag1.x) + Mathf.Abs(drag1.y);
             float c2 = Mathf.Abs(drag2.x) + Mathf.Abs(drag2.y);
-            Vector3 dir, pos;            
+            Vector3 dir, pos;
             
             //Rather than have the hands fight over who is scaling the object,
             //the hand with the largest distance travelled scales the object
@@ -122,7 +122,7 @@ public class InteractableObject : MonoBehaviour {
     
     
     public void ReleasePinch(int id) {
-        //Debug.Log("ReleasePinch: " + id);
+        Debug.Log("ReleasePinch: " + id);
         if (id == 0) {        
             if (hands == Hands.Left) { hands = Hands.None; }
             else if (hands == Hands.Both) { hands = Hands.Right; }            
@@ -132,7 +132,7 @@ public class InteractableObject : MonoBehaviour {
         }               
     }
     
-    public void ReleasePoint(int id) {       
+    public void ReleasePoint(int id) {
         //Debug.Log("ReleasePoint: " + id);
         if (id == 0) { //if left hand
             if (pointingHands == Hands.Left) { pointingHands = Hands.None; }
@@ -154,7 +154,7 @@ public class InteractableObject : MonoBehaviour {
         }
         pointingHands = (Hands) id;
         point = pos;
-        Vector3 circle = transform.position - origin;
+        /* Vector3 circle = transform.position - origin;
         Vector3 posMod = pos - origin;
         float zDif = (img.position - origin).z / posMod.z;        
         posMod = posMod*zDif;
@@ -163,12 +163,13 @@ public class InteractableObject : MonoBehaviour {
         if (circleRadius < circleRadiusMin) { 
             Debug.LogWarning("Rotation circle is too small (hand: " + id + "), r: " + circleRadius); 
             return false;
-        }
+        } */
         return true;
     }
     
 
     public void Drag(Vector3 pos, int id) {
+        if (pointingHands != Hands.None) { return; }
         //Debug.Log("Drag: " + id);
         //if (pointingHands != Hands.None) { return; } //Shouldn't be needed
         //Debug.Log("Hands: " + hands);
@@ -214,8 +215,10 @@ public class InteractableObject : MonoBehaviour {
 
 
     public void Rotate(Vector3 pos, int id) {
+        if (hands != Hands.None) { return; }
+        if (id != (int)pointingHands) { return; }
         //Rotate object around its center, depending on index finger movement
-        //Debug.LogError("Rotate: " + id + ", Hands: " + hands);        
+        //Debug.LogError("Rotate: " + id + ", Hands: " + hands);    
         
         Vector3 circle = transform.position - origin;
         
@@ -223,23 +226,9 @@ public class InteractableObject : MonoBehaviour {
         Vector3 posMod = pos - origin;
         float zDif = (img.position - origin).z / posMod.z;        
         posMod = posMod*zDif;
-        posMod.z = circle.z;
-        
-        //Recalculate
-        if (awayFrames > awayFramesLimit) {
-            awayFrames = 0;
-            circleRadius = Vector3.Distance(posMod, circle);
-            point = pos;
-            
-            //Not ideal, alternative would be to cancel the point gesture
-            if (circleRadius < circleRadiusMin) { circleRadius = circleRadiusMin; }
-        }
-        
         Vector3 startMod = point - origin;
         zDif = (img.position - origin).z / startMod.z;
         startMod = startMod*zDif;
-        
-        //Vector3 circle = transform.position - origin;
         
         //Ignore z value
         posMod.z = startMod.z = circle.z;
@@ -248,12 +237,16 @@ public class InteractableObject : MonoBehaviour {
         float distP = Vector3.Distance(posMod,circle);
         float distS = Vector3.Distance(startMod,circle);
         
-        if ((distP < circleRadius - distanceThresh || distP > circleRadius + distanceThresh) ||
-             (distS < circleRadius - distanceThresh || distS > circleRadius + distanceThresh)) {
-            awayFrames++;
-            //Debug.LogWarning("Point not close enough to circle: distP: " + distP + ", distS: " + distS + ", radius: " + circleRadius);
+        if (Mathf.Max(distP, distS) > circleRadius) {
             return;
         }
+        
+        //if ((distP < circleRadius - distanceThresh || distP > circleRadius + distanceThresh) ||
+        //     (distS < circleRadius - distanceThresh || distS > circleRadius + distanceThresh)) {
+        //    awayFrames++;
+            //Debug.LogWarning("Point not close enough to circle: distP: " + distP + ", distS: " + distS + ", radius: " + circleRadius);
+        //    return;
+        //}
         
         
         //Calculate rotation amount
