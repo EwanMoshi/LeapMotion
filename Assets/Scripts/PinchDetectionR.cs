@@ -7,6 +7,8 @@ public class PinchDetectionR : MonoBehaviour
 {
     
     public bool DebugSpam = false;
+    
+    public PinchDetectionR otherHand;
 
     [SerializeField]
     private float maxPinchDistance;
@@ -21,7 +23,7 @@ public class PinchDetectionR : MonoBehaviour
     public float force = 50.0f;
     public float magnetDistance = 0.05f;
 
-    public bool isPinchingR = false;
+    public bool isPinching = false;
     public Vector3 pinchPosR;
     public Vector3 previousPinchPosR = new Vector3(0.0f, 0.0f, 0.0f);
     private Vector3 prevPinchDistance;
@@ -54,25 +56,45 @@ public class PinchDetectionR : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Vector3 thumbPos = handModel.fingers[0].GetBoneCenter(3);
-        Vector3 indexPos = handModel.fingers[1].GetBoneCenter(3);
+        //Vector3 thumbPos = handModel.fingers[0].GetBoneCenter(3);
+        //Vector3 indexPos = handModel.fingers[1].GetBoneCenter(3);
 
         // store position of the pinch (at thumb)
         //pinchPosR = handModel.fingers[0].GetTipPosition();
         pos = handModel.fingers[0].GetTipPosition();
         pos += cameraOffset;
 
+        //Pointing
         togglePinch = false;
         isPointing = false;
-
         if (targetImage != null ) { // only perform pointing check if we have something grabbed already
             if (calculatePointing()) {
-                isPointing = true;
-                targetImage.OnPoint(pos, id);
+                if (isPinching) {
+                    OnReleasePinch();
+                }
+                
+                targetImage = otherHand.GetImage();
+                if (targetImage == null) {                 
+                    if (isPointing) { isPointing = false; }
+                    return; 
+                }
+                
+                if (!isPointing) {
+                    Debug.Log("Hand: " + id + ", is pointing");                                        
+                    isPointing = true;
+                    targetImage.OnPoint(pos, id);
+                } else {
+                    //targetImage.PointCheck(id);
+                    targetImage.Rotate(pos, id);
+                }
+                return;
             }
-            else {
-                targetImage.OnReleasePoint(id);
-            }
+            //Pointing is now deactivated during the other hands UnPinch
+            /*  else {
+                if (isPointing) {
+                    targetImage.OnReleasePoint(id);
+                }
+            } */
         }
         
 
@@ -82,124 +104,50 @@ public class PinchDetectionR : MonoBehaviour
             togglePinch = true;
         }
 
-
-
-        if (togglePinch && !isPinchingR)
-        {
-            OnPinch(pos);
-        }
-        else if (!togglePinch && isPinchingR)
-        {
+        if (togglePinch && !isPinching) {
+            FindImage(pos);
+            isPinching = true;            
+        } else if (!togglePinch && isPinching) {
             OnReleasePinch();
         }
 
-
         if (targetImage != null) {
-            if (isPointing) {
-                targetImage.Rotate(pos, id);
-            }
-            else {
+            //if (isPointing) {
+            //    targetImage.Rotate(pos, id);
+            //} else {
                 //Dragging an image
                 //Debug.Log("dragging: " + id);
                 targetImage.Drag(pos, id);
-            }
+            //}
         }
-        
-        /* if (grabbedImage != null) {
-            if(PinchDetectionL.isPinchingL) { // ensure both hands are pinching
-                scaleImage();
-            }
-            else {
-                
-                //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
-                //Debug.Log("Something has been grabbed");
-                //FreePositionFreezeRotation();
-                //Vector3 moveDistance = pinchPosR - grabbedImage.transform.position;
-                //Debug.Log("moveDistance >>>>  "+moveDistance);
-                //Debug.Log("force >>>>> " + force * moveDistance);
-                //grabbedImage.GetComponent<Rigidbody>().AddForce(force * moveDistance);
-            }
-        } */
-
-        //if(grabbedImage != null) {
-        //Debug.Log(grabbedImage.ToString());
-        //Debug.Log("grabbed");
-        //}
     }
-
-    private void scaleImage() {
-        //Renderer rend = grabbedImage.GetComponent<Renderer>();
-        grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;    
-
-        float newX =  Mathf.Abs(pinchPosR.x - PinchDetectionL.pinchPosL.x);
-        float newY = Mathf.Abs(pinchPosR.y - PinchDetectionL.pinchPosL.y);
-
-
-        grabbedImage.GetComponent<Rigidbody>().transform.localScale = new Vector3(newX, newY, 1.0f);
-
-
-    }
-
-    // This function frees the constraints so the image can be moved around and rotated
-    // but then freeze rotation so we don't rotate it while moving
-    // RigibodyConstraints API has no support for only freeing the position so we have 
-    // free all, then freeze rotation
-    void FreePositionFreezeRotation()
-    {
-        grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
-        grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
+    
+    //Used by pinching finger to get image
+    public InteractableObject GetImage() {
+        return targetImage;
     }
 
     void OnReleasePinch() {
         //Debug.Log("Release: " + id);
-        isPinchingR = false;
+        isPinching = false;
         if (targetImage != null) {
             targetImage.ReleasePinch(id);
             targetImage = null;
-        }
-        
-        
-        //if (grabbedImage != null) {
-        //    grabbedImage.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll; // freeze all (position and rotation)   
-        //}
-        //Physics.IgnoreCollision(handModel.GetComponent<Collider>(), grabbedImage.GetComponent<Collider>(), false);
-        //grabbedImage = null;
-        //isPinchingR = false;
-        //Debug.Log("ReleasePinch");
+        }        
     }
-
-    void OnPinch(Vector3 pos)
-    {
-        //Debug.Log("Pinch: " + id);
-        //Raycast from pinch position along the +z axis
+    
+    
+    void FindImage(Vector3 pos) {
+        //Raycast from index finger position along the +z axis
         RaycastHit hit;
         Physics.Raycast(origin, pos-origin, out hit, pinchDepth, layerMask);        
-        if (hit.collider != null) { 
-            //Debug.Log("Hit: " + hit.collider.name); 
-        }
+        //if (hit.collider != null) { Debug.Log("Hit: " + hit.collider.name); }
         
         if (hit.collider != null) {
             //Hit an image, do something...
             targetImage = hit.collider.gameObject.GetComponent<InteractableObject>();
             targetImage.Pinch(pos, id);            
         }
-        isPinchingR = true;
-        
-        
-        /* isPinchingR = true;
-        //Debug.Log("OnPinch");
-        Collider[] nearImages = Physics.OverlapSphere(pinchPosR, magnetDistance);
-        Vector3 dist = new Vector3(magnetDistance, 0.0f, 0.0f);
-
-        for (int i = 0; i < nearImages.Length; i++)
-        {
-            Vector3 newDistance = pinchPosR - nearImages[i].transform.position;
-            if (nearImages[i].GetComponent<Rigidbody>() != null && newDistance.magnitude < dist.magnitude && !nearImages[i].transform.IsChildOf(transform))
-            {
-                grabbedImage = nearImages[i];
-                dist = newDistance;
-            }
-        } */
     }
 
     private bool calculatePointing()

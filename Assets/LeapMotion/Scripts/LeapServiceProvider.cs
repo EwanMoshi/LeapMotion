@@ -290,7 +290,8 @@ namespace Leap.Unity {
           leapTransform = new LeapTransform(warpedPosition.ToVector(), warpedRotation.ToLeapQuaternion(), transform.lossyScale.ToVector() * 1e-3f);
           leapTransform.MirrorZ();
         } else {
-          leapTransform = transform.GetLeapMatrix();
+          //Debug.Log("HELLO?");
+          leapTransform = transform.GetLeapMatrix();          
         }
 
         toUpdate = source.TransformedCopy(leapTransform);
