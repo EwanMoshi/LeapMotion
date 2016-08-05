@@ -7,28 +7,24 @@ using System;
 public class GestureDetection : MonoBehaviour
 {
     public PinchDetector pincher;
-    public ExtendedFingerDetector efd;
+    public ExtendedFingerDetector efd; 
     public enum Handedness {Left, Right};
     public Handedness handedness;    
     public HandModel handModel;
     
-    bool isPinching = false;
-    bool isPointing = false;    
+    bool isPinching = false;    
     Leap.Controller leapController;
     LeapServiceProvider provider;
     
     Vector3 cameraOffset = new Vector3(-50,-50,0);
     Vector3 origin = new Vector3(0,0,-10);
-    Vector3 rot;
+    Vector3 rot;                                        
     
-    int layerMask = 1 << 9;
-    int pointTimer = 10;
-    int pointCounter;
-    int id = 0;
-    float pinchStart = 0.5f;
-    float pinchDepth = 50;
+    int layerMask = 1 << 9;                             //Used for raycasting between hands and images
+    int id = 0;                                         //0 is Left, 1 is Right
+    float pinchDepth = 50;                              //How far to raycast in +z direction (50 ~= inf)                
 
-    InteractableObject targetImage;
+    InteractableObject targetImage;                     //The image the hand is currently interacting with
 
     
     void Start()
@@ -47,26 +43,28 @@ public class GestureDetection : MonoBehaviour
         }
     }
     
-    void Update() {        
+    void Update() {    
+        
+        if (id == 0) { 
+            Vector3 pos = handModel.fingers[0].GetTipPosition();
+            Debug.Log("Hand: " + pos.x + ", " + pos.y + ", " + pos.z);
+        }
         if (isPinching) {
             //Manipulate Image (drag, rotate, scale)
-            //drag if no rotation, else rotate, or scale if both hands are pinched on same image
-            float z1 = rot.z;
-            float z2 = pincher.Rotation.eulerAngles.z;            
-            float angle = z1 - z2;
-            targetImage.transform.parent.Rotate(new Vector3(0,0,angle));
-            Debug.Log("rot: " + angle + ", f.z: " + z1 + ", t.z: " + z2);
+            //drag if no rotation, else rotate, or scale if both hands are pinched on same image            
+            //Handled by the image script
+            
+            if (targetImage.Rotate(pincher.Rotation.eulerAngles.z, id)) { return; }
+            targetImage.Drag(handModel.fingers[0].GetTipPosition() + cameraOffset, id);
         }
     }
     
     public void Pinch() {
         //Begins a pinch if requirements are met
-        //Vector3 pos = pincher.Position + cameraOffset;
-        Vector3 pos = handModel.fingers[0].GetTipPosition() + cameraOffset;
-        //pos += cameraOffset;
         
+        Vector3 pos = handModel.fingers[0].GetTipPosition() + cameraOffset;
         bool f = FindImage(pos);
-        Debug.Log("Pinch: " + handedness + ", isPinching: " + isPinching + ", Image: " + f + ", pos: " + pos);
+        //Debug.Log("Pinch: " + handedness + ", isPinching: " + isPinching + ", Image: " + f + ", pos: " + pos);
         
         if (!isPinching && f) {
             //Hand has pinched an image
@@ -76,142 +74,21 @@ public class GestureDetection : MonoBehaviour
                 targetImage = null;
                 return;
             }
-            rot = pincher.Rotation.eulerAngles;
         }
     }
     
     public void UnPinch() {        
         if (isPinching) {
-            
+            targetImage.UnPinch(id);
+            isPinching = false;
         }
-        
-        
-        
     }
-    
-    
-
-    // Update is called once per frame
-    /* void Update()
-    {
-        // store position of the pinch (at thumb)        
-        pos = handModel.fingers[0].GetTipPosition();
-        pos += cameraOffset;
-        
-        //Check pointing and pinch status
-        bool pinchFrame = false;
-        bool pointFrame = CalculatePointing();
-        if (!pointFrame) {             
-            pinchFrame = CalculatePinching();
-        }
-        
-        //If neither gesture is active, cancel interaction as needed
-        if (!pointFrame && !pinchFrame) { 
-            ReleasePoint(true);
-            ReleasePinch(true);
-            return;
-        }
-        
-        //Both gestures require an image in line with the index finger
-        if (targetImage == null) {
-            FindImage(pos);
-        }
-        
-        //If none is found, cancel
-        if (targetImage == null) { return; }
-        
-                
-        if (pointFrame) {// || pointCounter < pointTimer) {
-            //if (!pointFrame) { pointCounter++; }
-            Point(pos);
-        } else if (pinchFrame) {
-            Pinch(pos);
-        }
-    } */
     
     void OnDisable() {
         //ReleasePoint(true);
         //ReleasePinch(true);
         UnPinch();
     }
-        
-    /* void Point(Vector3 pos) {
-        //Cancel pinch if active
-        if (isPinching) {
-            ReleasePinch(false);
-            FindImage(pos);
-            if (targetImage == null) { return; }
-        }        
-        
-        if (!isPointing) {
-            pointCounter = 0;
-            Debug.Log("Point Start: " + id);
-            //Start of new pointing gesture
-            if (!targetImage.Point(pos, id)) {
-                //Can't Point
-                targetImage = null;
-                return;
-            }
-            isPointing = true;            
-        } else {
-            //Continue previous pointing
-            targetImage.Rotate(pos, id);
-        }
-    }
-    
-    void ReleasePoint(bool drop) {
-        if (isPointing) {
-            Debug.Log("Release Point: " + id);
-            targetImage.ReleasePoint(id);
-            if (drop) { targetImage = null; }
-            isPointing = false;
-        }
-    }
-    
-    void ReleasePinch(bool drop) {
-        if (isPinching) {
-            Debug.Log("Release Pinch: " + id);
-            targetImage.ReleasePinch(id);            
-            if (drop) { targetImage = null; }
-            isPinching = false;
-        }
-    }
-    
-    
-    void Pinch(Vector3 pos) {        
-        if (isPointing) {
-            ReleasePoint(false);
-            FindImage(pos);
-            if (targetImage == null) { return; }
-        }
-        
-        if (!isPinching) {
-            Debug.Log("Pinch Start: " + id);
-            //New pinch gesture
-            if (!targetImage.Pinch(pos, id)) {
-                targetImage = null;
-                return;
-            }
-            isPinching = true;
-        } else {
-            //Continue previous pinch
-            targetImage.Drag(pos, id);
-        }
-    }   
-    
-    
-    bool CalculatePinching() {
-        // make sure we're not pointing (because a point registers as a pinch at the moment)
-        //if (handModel.GetLeapHand().PinchStrength > pinchStart) { return true; }
-        
-        return pcd.IsPinching;
-    }
-    
-    //Used by pinching finger to get image - obsolete atm
-    public InteractableObject GetImage() {
-        return targetImage;
-    } */
-    
     
     bool FindImage(Vector3 pos) {
         //Raycast from index finger position along the +z axis
@@ -228,6 +105,7 @@ public class GestureDetection : MonoBehaviour
         return false;
     }
 
+    //Whats the point??
     /* private bool CalculatePointing()
     {
         //return efd.IsPointed();

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿/* using UnityEngine;
 using System.Collections;
 using Leap.Unity;
 using System;
@@ -195,3 +195,4 @@ public class PinchDetectionR : MonoBehaviour
 
 
 }
+ */

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿/* using UnityEngine;
 using System.Collections;
 using Leap.Unity;
 
@@ -25,7 +25,7 @@ public class PinchDetectionL : MonoBehaviour {
     private bool togglePinch = false;
     protected Collider grabbedImage;
 
-    /* // Use this for initialization
+    // Use this for initialization
     void Start () {
         handModel = transform.GetComponent<HandModel>(); //transform.GetComponent<HandModel>();
 	}
@@ -117,6 +117,7 @@ public class PinchDetectionL : MonoBehaviour {
                 dist = newDistance;
             }
         }
-    } */
+    }
 
 }
+ */
