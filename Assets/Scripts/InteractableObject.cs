@@ -105,7 +105,7 @@ public class InteractableObject : MonoBehaviour {
     }
     
     public bool Pinch(Vector3 pos, int id) {
-        //Debug.Log("Pinch: " + id);
+        Debug.Log("Pinch: " + id);
         if (pointingHands != Hands.None) { return false; }
         //Setup pinch original location
         if (id == 0) {
@@ -167,9 +167,9 @@ public class InteractableObject : MonoBehaviour {
         return true;
     }
     
-
+    
     public void Drag(Vector3 pos, int id) {
-        if (pointingHands != Hands.None) { return; }
+        //if (pointingHands != Hands.None) { return; }
         //Debug.Log("Drag: " + id);
         //if (pointingHands != Hands.None) { return; } //Shouldn't be needed
         //Debug.Log("Hands: " + hands);
