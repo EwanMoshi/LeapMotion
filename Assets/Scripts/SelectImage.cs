@@ -25,29 +25,24 @@ public class SelectImage : MonoBehaviour {
         }
     }
     
-    //public void Activate() { test = true; }
+    public bool Selected() {
+        return highlight.activeSelf;
+    }
     
-    public void Pinch(Vector3 pos) {        
+    public int Pinch(Vector3 pos, int force = -1) {
         Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(cam,pos);
-        //Vector2 screenPos = cam.WorldToScreenPoint(pos) * 5;
-        Debug.Log("Pinch Gallery - ScreenPos: " + screenPos + ", Pos: " + pos);
+        //Debug.Log("Pinch Gallery - ScreenPos: " + screenPos + ", Pos: " + pos);
         if (test != null) { test.position = pos; }
-        //rt.anchoredPosition = screenPos - canvasRT.sizeDelta / 2;
         if (RectTransformUtility.RectangleContainsScreenPoint(rt, screenPos, cam)) {
-            if (highlight != null) { highlight.SetActive(!highlight.activeSelf); }
+            if (highlight != null) { 
+                bool state = !highlight.activeSelf;
+                if (force == 0) { state = false; }
+                else if (force == 1) { state = true; }
+                highlight.SetActive(state);
+                if (highlight.activeSelf) { return 1; } else { return 0; }
+            }
         }
-        
-        /* Vector2 vp = cam.WorldToViewportPoint(pos);
-        Vector2 vz = new Vector2(
-        ((vp.x*canvasRT.sizeDelta.x) - (canvasRT.sizeDelta.x*0.5f)),
-        ((vp.y*canvasRT.sizeDelta.y) - (canvasRT.sizeDelta.y*0.5f)));
-        
-        Debug.Log("vz : " + vz.x + "," + vz.y); */
-        
-        /* Vector3[] fc = new Vector3[4];;
-        rt.GetWorldCorners(fc);
-        Debug.Log("Corners: " + fc[0] + "," + fc[1] + "," + fc[2] + "," + fc[3]);
-        //Debug.Log("canvas pos: " + WorldToCanvasPosition(canvasRT, cam, pos)); */
+        return -1;
     }
     
     

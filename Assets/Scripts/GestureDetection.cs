@@ -13,6 +13,7 @@ public class GestureDetection : MonoBehaviour
     public HandModel handModel;
     
     bool isPinching = false;
+    bool selectionFromGallery = false;
     bool inGallery = false;
     Leap.Controller leapController;
     LeapServiceProvider provider;
@@ -28,6 +29,7 @@ public class GestureDetection : MonoBehaviour
 
     InteractableObject targetImage;                     //The image the hand is currently interacting with
     public SelectImage[] selectImage;                   //The images in the gallery   
+    public ArrayList selectedImages;
     
     void Start()
     {
@@ -35,6 +37,7 @@ public class GestureDetection : MonoBehaviour
         origin += cameraOffset;
         if (selectImage == null || selectImage.Length == 0) {
             selectImage = GameObject.FindObjectsOfType<SelectImage>();
+            selectedImages = new ArrayList();
         }
     }
     
@@ -49,36 +52,55 @@ public class GestureDetection : MonoBehaviour
     }
     
     void Update() {
-        if (id == 0) { 
-            Vector3 pos = handModel.fingers[0].GetTipPosition();
-            //Debug.Log("Hand: " + pos.x + ", " + pos.y + ", " + pos.z);
-        }
         if (isPinching) {
-            //Manipulate Image (drag, rotate, scale)
-            //drag if no rotation, else rotate, or scale if both hands are pinched on same image            
-            //Handled by the image script
-            
-            if (targetImage.Rotate(pincher.Rotation.eulerAngles.z, id)) { return; }
-            targetImage.Drag(handModel.fingers[0].GetTipPosition() + cameraOffset, id);
+            if (!inGallery) {
+                if (!selectionFromGallery) {
+                    //Manipulate Image (drag, rotate, scale)
+                    Vector3 pos = handModel.fingers[0].GetTipPosition() + cameraOffset;
+                    if (targetImage.Rotate(pos, pincher.Rotation.eulerAngles.z, id)) { return; }
+                    targetImage.Drag(pos, id);
+                } else {
+                    //Some selected images dragged from gallery
+                    
+                    
+                }
+            } else {
+                //Manipulate thumbnails in gallery
+                
+                
+                
+            }
         }
     }
     
     public void GalleryTrigger(bool on) {
         if (!inGallery && on) {
             inGallery = true;
-            UnPinch();
+            UnPinchDrawingArea();
         }
         if (inGallery && !on) {
             inGallery = false;
             
             //Logic for transition from gallery (dragging selection...)
             
+            //If any images are selected create the 'full size' versions of them
+            //and attach them to the pinching hand in some fashion
+            
+            
+            
+            
+            //Cancel previous selection
         }
     }
     
     public void PinchGate(bool on) {
+        //Decide which pinch action to take - Gallery or Main Area, On or Off
         if (!inGallery) {
-            PinchDrawingArea();
+            if (on) {
+                PinchDrawingArea();
+            } else {
+                UnPinchDrawingArea();
+            }
         } else {
             PinchGalleryArea();
         }
@@ -86,7 +108,6 @@ public class GestureDetection : MonoBehaviour
     
     public void PinchDrawingArea() {
         //Begins a pinch if requirements are met
-        
         Vector3 pos = handModel.fingers[0].GetTipPosition() + cameraOffset;
         bool f = FindImage(pos);
         //Debug.Log("Pinch: " + handedness + ", isPinching: " + isPinching + ", Image: " + f + ", pos: " + pos);
@@ -102,10 +123,24 @@ public class GestureDetection : MonoBehaviour
         }
     }
     
+    public void UnPinchDrawingArea() {        
+        if (isPinching) {
+            targetImage.UnPinch(id);
+            isPinching = false;
+        }
+    }
+    
     public void PinchGalleryArea() {        
         Vector3 pos = handModel.fingers[0].GetTipPosition();        
         foreach (SelectImage s in selectImage) {
             s.Pinch(pos);
+        }
+    }
+    
+    public void UnPinchGalleryArea() {
+        Vector3 pos = handModel.fingers[0].GetTipPosition();
+        foreach (SelectImage s in selectImage) {
+            s.Pinch(pos, 0);
         }
         
     }
@@ -116,17 +151,13 @@ public class GestureDetection : MonoBehaviour
         
     }
     
-    public void UnPinch() {        
-        if (isPinching) {
-            targetImage.UnPinch(id);
-            isPinching = false;
-        }
-    }
+    
     
     void OnDisable() {
         //ReleasePoint(true);
         //ReleasePinch(true);
-        UnPinch();
+        UnPinchDrawingArea();
+        UnPinchGalleryArea();
     }
     
     bool FindImage(Vector3 pos) {

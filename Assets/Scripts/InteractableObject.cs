@@ -158,8 +158,9 @@ public class InteractableObject : MonoBehaviour {
         }
     }
 
-    public bool Rotate(float zAngle, int id) {
+    public bool Rotate(Vector3 pos, float zAngle, int id) {
         if (id == 0 && hands != Hands.Left || id == 1 && hands != Hands.Right) { return false; }
+        
         //Assuming the original rotation to be 0 (or 360 if required) seems to work well            
         float angle = 0;
         if (zAngle >= 180) { angle = 360 - zAngle; }
@@ -171,12 +172,15 @@ public class InteractableObject : MonoBehaviour {
             return false;
         }
         
+        //Continue to update drag position for smoothness
+        if (id == 0) { hand1 = pos; }
+        if (id == 1) { hand2 = pos; }
+        
         //Ensure first acceptable rotation remains slow
         if (angle < 0) { angle += rotationMin; }
         else { angle -= rotationMin; }
         
-        
-        
+        //Rotate
         img.Rotate(new Vector3(0,0,angle));
         return true;
     }

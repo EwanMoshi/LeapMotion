@@ -7,7 +7,7 @@ public class GalleryTransition : MonoBehaviour {
     
     public GestureDetection leftHand;
     public GestureDetection rightHand;    
-    
+    bool on = true;
 
 	// Use this for initialization
 	void Start () {
@@ -23,12 +23,22 @@ public class GalleryTransition : MonoBehaviour {
         if (other != null) {
             if (other.gameObject.name.Equals("bone3IL")) {
                 //Debug.Log("Left in Gallery");
-                leftHand.GalleryTrigger(true);
+                leftHand.GalleryTrigger(on);
             } else if (other.gameObject.name.Equals("bone3IR")) {
                 //Debug.Log("Right in Gallery");
-                rightHand.GalleryTrigger(true);
+                rightHand.GalleryTrigger(on);
             }
         }
+        on = true;
+    }
+    
+    void OnTriggerExit(Collider other) {
+        on = false;
+        OnTriggerEnter(other);
+    }
+    
+    void OnTriggerStay(Collider other) {
+        //If required...
     }
     
 }
