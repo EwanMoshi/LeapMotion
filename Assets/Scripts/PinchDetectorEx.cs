@@ -176,6 +176,8 @@ namespace Leap.Unity {
         }
       }
       transform.position /= 2.0f;
+      
+      
 
       if (_isPinching) {
         if (pinchDistance > _deactivatePinchDist) {
@@ -202,9 +204,9 @@ namespace Leap.Unity {
           _lastPinchTime = Time.time;
           ensurePinchInfoUpToDate();
           //Debug.Log(selectImage.Length);
-          for (int i = 0; i < selectImage.Length; i++) {
+          /* for (int i = 0; i < selectImage.Length; i++) {
               selectImage[i].Pinch(_pinchPos);
-          }
+          } */
           //selectImage.Pinch(_pinchPos);
           //Activate();
         } else {

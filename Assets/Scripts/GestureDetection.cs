@@ -12,7 +12,8 @@ public class GestureDetection : MonoBehaviour
     public Handedness handedness;    
     public HandModel handModel;
     
-    bool isPinching = false;    
+    bool isPinching = false;
+    bool inGallery = false;
     Leap.Controller leapController;
     LeapServiceProvider provider;
     
@@ -20,17 +21,21 @@ public class GestureDetection : MonoBehaviour
     Vector3 origin = new Vector3(0,0,-10);
     Vector3 rot;                                        
     
-    int layerMask = 1 << 9;                             //Used for raycasting between hands and images
+    int layerMask = (1 << 9);                           //Used for raycasting between hands and images
     int id = 0;                                         //0 is Left, 1 is Right
-    float pinchDepth = 50;                              //How far to raycast in +z direction (50 ~= inf)                
+    float pinchDepth = 50;                              //How far to raycast in +z direction (50 ~= inf)
+    
 
     InteractableObject targetImage;                     //The image the hand is currently interacting with
-
+    public SelectImage[] selectImage;                   //The images in the gallery   
     
     void Start()
     {
         id = (int)handedness;
         origin += cameraOffset;
+        if (selectImage == null || selectImage.Length == 0) {
+            selectImage = GameObject.FindObjectsOfType<SelectImage>();
+        }
     }
     
     void Awake() {   
@@ -43,11 +48,10 @@ public class GestureDetection : MonoBehaviour
         }
     }
     
-    void Update() {    
-        
+    void Update() {
         if (id == 0) { 
             Vector3 pos = handModel.fingers[0].GetTipPosition();
-            Debug.Log("Hand: " + pos.x + ", " + pos.y + ", " + pos.z);
+            //Debug.Log("Hand: " + pos.x + ", " + pos.y + ", " + pos.z);
         }
         if (isPinching) {
             //Manipulate Image (drag, rotate, scale)
@@ -59,7 +63,28 @@ public class GestureDetection : MonoBehaviour
         }
     }
     
-    public void Pinch() {
+    public void GalleryTrigger(bool on) {
+        if (!inGallery && on) {
+            inGallery = true;
+            UnPinch();
+        }
+        if (inGallery && !on) {
+            inGallery = false;
+            
+            //Logic for transition from gallery (dragging selection...)
+            
+        }
+    }
+    
+    public void PinchGate(bool on) {
+        if (!inGallery) {
+            PinchDrawingArea();
+        } else {
+            PinchGalleryArea();
+        }
+    }
+    
+    public void PinchDrawingArea() {
         //Begins a pinch if requirements are met
         
         Vector3 pos = handModel.fingers[0].GetTipPosition() + cameraOffset;
@@ -75,6 +100,20 @@ public class GestureDetection : MonoBehaviour
                 return;
             }
         }
+    }
+    
+    public void PinchGalleryArea() {        
+        Vector3 pos = handModel.fingers[0].GetTipPosition();        
+        foreach (SelectImage s in selectImage) {
+            s.Pinch(pos);
+        }
+        
+    }
+    
+    public void TapGalleryArea() {
+        //Multi select
+        if (!inGallery) { return; }
+        
     }
     
     public void UnPinch() {        
@@ -94,7 +133,7 @@ public class GestureDetection : MonoBehaviour
         //Raycast from index finger position along the +z axis
         RaycastHit hit;
         Physics.Raycast(origin, pos-origin, out hit, pinchDepth, layerMask);        
-        //if (hit.collider != null) { Debug.Log("Hit: " + hit.collider.name); }
+        if (hit.collider != null) { Debug.Log("Hit: " + hit.collider.name); }
         //Debug.DrawRay(origin, pos-origin, Color.blue, 5);
         
         if (hit.collider != null) {
