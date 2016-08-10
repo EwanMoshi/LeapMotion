@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class SelectImage : MonoBehaviour {
     
@@ -8,25 +9,30 @@ public class SelectImage : MonoBehaviour {
     public GameObject highlight;
     Camera cam;
     public Transform test;
-    bool done = false;
+    public RawImage raw;
 	
     void Start() {
         rt = GetComponent<RectTransform>();
         canvasRT = GameObject.Find("GalleryUI").GetComponent<RectTransform>();
         highlight = transform.Find("Highlight").gameObject;
         cam = GameObject.Find("GalleryCamera").GetComponent<Camera>();
-        //cam = Camera.main;
+        if (raw == null) { raw = GetComponentInChildren<RawImage>(); }
     }
     
-    void Update() { 
-        if (!done) {
-        Debug.Log(name + " - screenPos: " + transform.position);
-        done = true;
-        }
+    void Update() {         
     }
     
-    public bool Selected() {
+    public bool IsSelected() {
         return highlight.activeSelf;
+    }
+    
+    public void DeSelect() {
+        highlight.SetActive(false);
+    }
+    
+    public bool PinchCheck(Vector3 pos) {
+        Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(cam,pos);
+        return RectTransformUtility.RectangleContainsScreenPoint(rt, screenPos, cam);
     }
     
     public int Pinch(Vector3 pos, int force = -1) {
@@ -34,6 +40,7 @@ public class SelectImage : MonoBehaviour {
         //Debug.Log("Pinch Gallery - ScreenPos: " + screenPos + ", Pos: " + pos);
         if (test != null) { test.position = pos; }
         if (RectTransformUtility.RectangleContainsScreenPoint(rt, screenPos, cam)) {
+            
             if (highlight != null) { 
                 bool state = !highlight.activeSelf;
                 if (force == 0) { state = false; }

@@ -20,14 +20,21 @@ public class InteractableObject : MonoBehaviour {
     Vector3 drag1;
     Vector3 drag2;
     
-    public float rotationMin = 2;
-    public float rotationScale = 0.2f;    
-
+    public float rotationMin = 2;    
+    public float rotationScale = 0.2f;   
+    
+    
+    GameObject highlight;
+    
+    
 
     void Start() {        
         if (img == null) {
             img = transform.parent.transform;
-        }   
+        }
+        if (highlight == null) {
+            highlight = transform.Find("Highlight").gameObject;
+        }
     }
     
     
@@ -101,6 +108,12 @@ public class InteractableObject : MonoBehaviour {
             else if (hands == Hands.Left) { hands = Hands.Both; }
             hand2 = pos;
         }
+        //Enable highlight
+        if (!highlight.activeSelf) {
+            highlight.SetActive(true);
+        }
+        
+        //Always true... yay?
         return true;
     }
     
@@ -113,7 +126,11 @@ public class InteractableObject : MonoBehaviour {
         } else {
             if (hands == Hands.Right) { hands = Hands.None; }
             else if (hands == Hands.Both) { hands = Hands.Left; }            
-        }      
+        } 
+        if (hands == Hands.None) {
+            highlight.SetActive(false);
+        }
+        
     }
      
     
@@ -162,25 +179,37 @@ public class InteractableObject : MonoBehaviour {
         if (id == 0 && hands != Hands.Left || id == 1 && hands != Hands.Right) { return false; }
         
         //Assuming the original rotation to be 0 (or 360 if required) seems to work well            
-        float angle = 0;
+        float angle = 0, min = 0;
         if (zAngle >= 180) { angle = 360 - zAngle; }
         else { angle = 0 - zAngle; }          
             
         //Scale rotation down and ignore if below threshold
-        angle *= rotationScale;                        
+        //Threshold depends upon hand and direction, i.e. easier to rotate hand away from body
+        //Also adjusts angle by mininum, so it starts at 0
+        angle *= rotationScale;
+        if (id == 0) {
+            angle -= 2;
+        } else {
+            angle += 2;
+        }
         if (Mathf.Abs(angle) < rotationMin) {
             return false;
         }
-        
-        //Continue to update drag position for smoothness
-        if (id == 0) { hand1 = pos; }
-        if (id == 1) { hand2 = pos; }
         
         //Ensure first acceptable rotation remains slow
         if (angle < 0) { angle += rotationMin; }
         else { angle -= rotationMin; }
         
+        
+        //Continue to update drag position for smoothness
+        if (id == 0) { hand1 = pos; }
+        if (id == 1) { hand2 = pos; }
+        
+        //Debug.Log("ModAngel: " + modAngle + ", Angle: " + angle);
+        Debug.Log("zAngle: " + zAngle + ", Angle: " + angle);
+        
         //Rotate
+        //img.Rotate(new Vector3(0,0,modAngle));
         img.Rotate(new Vector3(0,0,angle));
         return true;
     }

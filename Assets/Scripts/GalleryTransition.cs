@@ -39,6 +39,8 @@ public class GalleryTransition : MonoBehaviour {
     
     void OnTriggerStay(Collider other) {
         //If required...
+        OnTriggerEnter(other);
+        
     }
     
 }
