@@ -39,14 +39,20 @@ public class GestureDetection : MonoBehaviour
     public SelectImage[] selectImage;                   //The images in the gallery
     public ArrayList selectedImages;
 
-    void Start()
-    {
+    float tempHandPos = 0.0f; // store the position of the hand temporarily when palm faces up (for loading)
+    bool isPalmUp = false;
+    bool imageLoaded = false;
+
+    void Start() {
         id = (int)handedness;
         origin += cameraOffset;
         if (selectImage == null || selectImage.Length == 0) {
             selectImage = GameObject.FindObjectsOfType<SelectImage>();
             selectedImages = new ArrayList();
         }
+
+        // repeatedly call CheckLoadImage function every 0.5 seconds
+        InvokeRepeating("CheckLoadImage", 1f, 0.5f);
     }
 
     void Awake() {
@@ -59,7 +65,34 @@ public class GestureDetection : MonoBehaviour
         }        
     }
 
+    // palm facing up - initializes timer 
+    void CheckLoadImage() {
+        float currentHandPos = handModel.fingers[0].GetTipPosition().y + cameraOffset.y;
+        if (isPalmUp && !imageLoaded) {
+            if (currentHandPos - tempHandPos >= 0.1) { // if the hand creates a moving up gesture
+                Debug.Log("LOAD IMAGES");
+                imageLoaded = true;
+            }
+        }
+    }
+
     void Update() {
+
+        // if palm normal is > 0.2 then palm is facing up
+        // only check if palm is up if we're not pinching, this is to avoid clashes 
+        // with rotation when the palm might be facing up
+        if (!isPinching && handModel.GetPalmNormal().y >= 0.2) {
+            if (isPalmUp) { }
+            else { // only store the position the first time the palm faces up
+                tempHandPos = handModel.fingers[0].GetTipPosition().y + cameraOffset.y; // store current hand position temporarily
+                isPalmUp = true;
+            }
+        }
+        else {
+            isPalmUp = false;
+            imageLoaded = false; // reset image loaded (used for when an image is loaded)
+        }
+
         //Debug.Log("Pinching: " + isPinching + ", selectionFromGallery: " + selectionFromGallery + ", parentPanel: " + parentPanel);
         if (isPinching) {
             if (!inGallery && !selectionFromGallery) {
