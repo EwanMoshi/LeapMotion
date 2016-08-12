@@ -1,0 +1,147 @@
+fileFormatVersion: 2
+guid: 5860d9c50e8ffea4f93c3460723e8c71
+timeCreated: 1470908360
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: base-bulb_Cylinder_015
+    100002: bulb-glass_Cylinder_016
+    100004: center_Cube_001
+    100006: chain0_Cylinder_005
+    100008: curve-decorations2_Plane_002
+    100010: curve-decorations_Plane_001
+    100012: glass-decoration-bulb_Circle
+    100014: //RootNode
+    100016: Plane
+    100018: stones-first_Icosphere_002
+    100020: stones2_Icosphere
+    100022: stones2_Icosphere_MeshPart0
+    100024: stones2_Icosphere_MeshPart1
+    100026: stones3_Icosphere_008
+    100028: top_Cube
+    100030: Torus
+    400000: base-bulb_Cylinder_015
+    400002: bulb-glass_Cylinder_016
+    400004: center_Cube_001
+    400006: chain0_Cylinder_005
+    400008: curve-decorations2_Plane_002
+    400010: curve-decorations_Plane_001
+    400012: glass-decoration-bulb_Circle
+    400014: //RootNode
+    400016: Plane
+    400018: stones-first_Icosphere_002
+    400020: stones2_Icosphere
+    400022: stones2_Icosphere_MeshPart0
+    400024: stones2_Icosphere_MeshPart1
+    400026: stones3_Icosphere_008
+    400028: top_Cube
+    400030: Torus
+    2300000: base-bulb_Cylinder_015
+    2300002: bulb-glass_Cylinder_016
+    2300004: center_Cube_001
+    2300006: chain0_Cylinder_005
+    2300008: curve-decorations2_Plane_002
+    2300010: curve-decorations_Plane_001
+    2300012: glass-decoration-bulb_Circle
+    2300014: Plane
+    2300016: stones-first_Icosphere_002
+    2300018: stones2_Icosphere_MeshPart0
+    2300020: stones2_Icosphere_MeshPart1
+    2300022: stones3_Icosphere_008
+    2300024: top_Cube
+    2300026: Torus
+    3300000: base-bulb_Cylinder_015
+    3300002: bulb-glass_Cylinder_016
+    3300004: center_Cube_001
+    3300006: chain0_Cylinder_005
+    3300008: curve-decorations2_Plane_002
+    3300010: curve-decorations_Plane_001
+    3300012: glass-decoration-bulb_Circle
+    3300014: Plane
+    3300016: stones-first_Icosphere_002
+    3300018: stones2_Icosphere_MeshPart0
+    3300020: stones2_Icosphere_MeshPart1
+    3300022: stones3_Icosphere_008
+    3300024: top_Cube
+    3300026: Torus
+    4300000: curve-decorations2_Plane_002
+    4300002: glass-decoration-bulb_Circle
+    4300004: stones-first_Icosphere_002
+    4300006: base-bulb_Cylinder_015
+    4300008: curve-decorations_Plane_001
+    4300010: Plane
+    4300012: chain0_Cylinder_005
+    4300014: bulb-glass_Cylinder_016
+    4300016: center_Cube_001
+    4300018: stones2_Icosphere_MeshPart0
+    4300020: stones2_Icosphere_MeshPart1
+    4300022: Torus
+    4300024: top_Cube
+    4300026: stones3_Icosphere_008
+    7400000: Default Take
+    9500000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleRotations: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
