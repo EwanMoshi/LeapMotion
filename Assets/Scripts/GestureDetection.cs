@@ -21,7 +21,8 @@ public class GestureDetection : MonoBehaviour
     LeapServiceProvider provider;
     GameObject[] imagePanels;
     Transform parentPanel;
-    
+
+    GameObject[] pictures = new GameObject[8]; //store all the pictures in an array
 
     Vector3 cameraOffset = new Vector3(-50,-50,0);
     Vector3 origin = new Vector3(0,0,-10);
@@ -39,9 +40,11 @@ public class GestureDetection : MonoBehaviour
     public SelectImage[] selectImage;                   //The images in the gallery
     public ArrayList selectedImages;
 
-    float tempHandPos = 0.0f; // store the position of the hand temporarily when palm faces up (for loading)
+    // Variables for load image gesture
+    float tempHandPos = 0.0f; // store the position of the hand temporarily when palm faces up 
     bool isPalmUp = false;
     bool imageLoaded = false;
+    int imagesLoaded = 0;
 
     void Start() {
         id = (int)handedness;
@@ -53,6 +56,8 @@ public class GestureDetection : MonoBehaviour
 
         // repeatedly call CheckLoadImage function every 0.5 seconds
         InvokeRepeating("CheckLoadImage", 1f, 0.5f);
+
+        loadPictures();
     }
 
     void Awake() {
@@ -65,23 +70,12 @@ public class GestureDetection : MonoBehaviour
         }        
     }
 
-    // palm facing up - initializes timer 
-    void CheckLoadImage() {
-        float currentHandPos = handModel.fingers[0].GetTipPosition().y + cameraOffset.y;
-        if (isPalmUp && !imageLoaded) {
-            if (currentHandPos - tempHandPos >= 0.1) { // if the hand creates a moving up gesture
-                Debug.Log("LOAD IMAGES");
-                imageLoaded = true;
-            }
-        }
-    }
-
     void Update() {
 
-        // if palm normal is > 0.2 then palm is facing up
+        // if palm normal is > 0.1 then palm is facing up
         // only check if palm is up if we're not pinching, this is to avoid clashes 
         // with rotation when the palm might be facing up
-        if (!isPinching && handModel.GetPalmNormal().y >= 0.2) {
+        if (!isPinching && handModel.GetPalmNormal().y >= 0.1) {
             if (isPalmUp) { }
             else { // only store the position the first time the palm faces up
                 tempHandPos = handModel.fingers[0].GetTipPosition().y + cameraOffset.y; // store current hand position temporarily
@@ -316,5 +310,34 @@ public class GestureDetection : MonoBehaviour
     }
 
 
+    // palm facing up - initializes timer 
+    void CheckLoadImage() {
+        float currentHandPos = handModel.fingers[0].GetTipPosition().y + cameraOffset.y;
+        if (isPalmUp && !imageLoaded) {
+            if (currentHandPos - tempHandPos >= 0.01) { // if the hand creates a moving up gesture
+                loadImage(imagesLoaded++); // load an image and count the number of loaded
+                imageLoaded = true;
+            }
+        }
+    }
 
+    void loadPictures() {
+        for (int i = 0; i < 8; i++) {
+            GameObject picturePanel = GameObject.Find("PicturePanel ("+i+")");
+            if (picturePanel != null) {
+                pictures[i] = picturePanel;
+                picturePanel.SetActive(false); // store picture in array and disable it
+            }
+        }
+    }
+
+    void loadImage(int i) {
+        if (i < 8) { //check to avoid IndexOutOfRange
+            GameObject picturePanel = pictures[i];
+            if (picturePanel != null) {
+                // enable (or "load" - we can assume it's loaded even though we're just enabling) image
+                picturePanel.SetActive(true);
+            }
+        }
+    }
 }
