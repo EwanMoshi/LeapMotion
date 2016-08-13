@@ -22,8 +22,6 @@ public class GestureDetection : MonoBehaviour
     GameObject[] imagePanels;
     Transform parentPanel;
 
-    GameObject[] pictures = new GameObject[8]; //store all the pictures in an array
-
     Vector3 cameraOffset = new Vector3(-50,-50,0);
     Vector3 origin = new Vector3(0,0,-10);
     Vector3 rot;
@@ -44,7 +42,7 @@ public class GestureDetection : MonoBehaviour
     float tempHandPos = 0.0f; // store the position of the hand temporarily when palm faces up 
     bool isPalmUp = false;
     bool imageLoaded = false;
-    int imagesLoaded = 0;
+    ImageLoader imageLoader;
 
     void Start() {
         id = (int)handedness;
@@ -57,7 +55,8 @@ public class GestureDetection : MonoBehaviour
         // repeatedly call CheckLoadImage function every 0.5 seconds
         InvokeRepeating("CheckLoadImage", 1f, 0.5f);
 
-        loadPictures();
+        imageLoader = new ImageLoader();
+        imageLoader.loadPictures();
     }
 
     void Awake() {
@@ -315,29 +314,11 @@ public class GestureDetection : MonoBehaviour
         float currentHandPos = handModel.fingers[0].GetTipPosition().y + cameraOffset.y;
         if (isPalmUp && !imageLoaded) {
             if (currentHandPos - tempHandPos >= 0.01) { // if the hand creates a moving up gesture
-                loadImage(imagesLoaded++); // load an image and count the number of loaded
+                imageLoader.loadImage(); // load an image and count the number of loaded
                 imageLoaded = true;
             }
         }
     }
 
-    void loadPictures() {
-        for (int i = 0; i < 8; i++) {
-            GameObject picturePanel = GameObject.Find("PicturePanel ("+i+")");
-            if (picturePanel != null) {
-                pictures[i] = picturePanel;
-                picturePanel.SetActive(false); // store picture in array and disable it
-            }
-        }
-    }
 
-    void loadImage(int i) {
-        if (i < 8) { //check to avoid IndexOutOfRange
-            GameObject picturePanel = pictures[i];
-            if (picturePanel != null) {
-                // enable (or "load" - we can assume it's loaded even though we're just enabling) image
-                picturePanel.SetActive(true);
-            }
-        }
-    }
 }
