@@ -19,7 +19,7 @@ public class GestureDetection : MonoBehaviour
     bool inGallery = false;
     Leap.Controller leapController;
     LeapServiceProvider provider;
-    GameObject[] imagePanels;
+    public GameObject[] imagePanels;
     Transform parentPanel;
 
     Vector3 cameraOffset = new Vector3(-50,-50,0);
@@ -32,17 +32,23 @@ public class GestureDetection : MonoBehaviour
     //float spawnOffsetY = .1f;
     float spawnOffsetZ = .05f;
     float spawnSize = .75f;
+    bool pinchTimer = false;
+    int pinchFrames = 30;
+    int pinchCounter = 0;
 
 
     InteractableObject targetImage;                     //The image the hand is currently interacting with
     public SelectImage[] selectImage;                   //The images in the gallery
-    public ArrayList selectedImages;
-
+    public ArrayList selectedImages;                    //The current gallery selection
+    
+    
     // Variables for load image gesture
     float tempHandPos = 0.0f; // store the position of the hand temporarily when palm faces up 
     bool isPalmUp = false;
-    bool imageLoaded = false;
-    ImageLoader imageLoader;
+    //bool imageLoaded = false;
+    //ImageLoader imageLoader;
+    bool galleryToggled = false;
+    ToggleGallery tg;
 
     void Start() {
         id = (int)handedness;
@@ -54,9 +60,9 @@ public class GestureDetection : MonoBehaviour
 
         // repeatedly call CheckLoadImage function every 0.5 seconds
         InvokeRepeating("CheckLoadImage", 1f, 0.5f);
-
-        imageLoader = new ImageLoader();
-        imageLoader.loadPictures();
+        tg = GameObject.FindObjectOfType<ToggleGallery>();
+        //imageLoader = new ImageLoader();
+        //imageLoader.loadPictures();
     }
 
     void Awake() {
@@ -69,8 +75,7 @@ public class GestureDetection : MonoBehaviour
         }        
     }
 
-    void Update() {
-
+    void Update() {        
         // if palm normal is > 0.1 then palm is facing up
         // only check if palm is up if we're not pinching, this is to avoid clashes 
         // with rotation when the palm might be facing up
@@ -82,7 +87,18 @@ public class GestureDetection : MonoBehaviour
         }
         else {
             isPalmUp = false;
-            imageLoaded = false; // reset image loaded (used for when an image is loaded)
+            //imageLoaded = false; // reset image loaded (used for when an image is loaded)
+        }
+        
+        if (pinchTimer) {
+            if (pinchCounter == pinchFrames) {
+                Debug.Log("Update Pincher");
+                PinchGalleryArea();
+                pinchCounter = 0;
+                pinchTimer = false;
+            } else {
+                pinchCounter++;
+            }
         }
         
         if (isPinching) {
@@ -109,10 +125,16 @@ public class GestureDetection : MonoBehaviour
         }
         if (inGallery && !on) {
             inGallery = false;
+            if (selectedImages.Count != 0) {
+                foreach (SelectImage s in selectedImages) {
+                    s.DeSelect();
+                }
+                selectedImages.Clear();
+            }
         }
     }
 
-    public void PinchGate(bool on) {
+    public void PinchGate(bool on) {        
         //Decide which pinch action to take - Gallery or Main Area, On or Off
         if (!inGallery) {
             if (on) {
@@ -147,11 +169,20 @@ public class GestureDetection : MonoBehaviour
     }
     
     public void UnPinchDrawingArea() {
+        if (pinchTimer) { pinchTimer = false; }
         if (isPinching && parentPanel != null) { // && !inGallery) {
             Debug.Log("UnPinchDrawingArea");
             DropGalleryImage();
         } else if (isPinching) {
-            targetImage.UnPinch(id);
+            if (targetImage != null) {
+                targetImage.UnPinch(id);
+            }
+            if (selectedImages.Count != 0) {
+                foreach (SelectImage s in selectedImages) {
+                    s.DeSelect();
+                }
+                selectedImages.Clear();
+            }
             isPinching = false;
         }
     }
@@ -160,8 +191,9 @@ public class GestureDetection : MonoBehaviour
         //Transition newly created panels to drawing area camera
         if (del) { Destroy(parentPanel.gameObject); }
         else {
+            parentPanel.transform.position += cameraOffset;
             foreach (GameObject go in imagePanels) {
-                go.transform.position += cameraOffset;
+                //go.transform.position += cameraOffset;
                 go.transform.parent = null;
             }
         }
@@ -180,7 +212,7 @@ public class GestureDetection : MonoBehaviour
         foreach (SelectImage s in selectedImages) {
             Debug.Log("selectedImages: " + s.gameObject.name);
             int offset = i - selectedImages.Count / 2;
-            Vector3 imgPos = new Vector3(pos.x + imgSize * offset, pos.y, pos.z + spawnOffsetZ);
+            Vector3 imgPos = new Vector3(pos.x + imgSize * offset * .6f, pos.y, pos.z + spawnOffsetZ);
             imagePanels[i] = (GameObject)Instantiate(imagePanelPrefab, imgPos, Quaternion.identity);
             imagePanels[i].transform.localScale *= imgSize;
             //imagePanels[i].transform.Rotate(new Vector3(0,180,0));
@@ -205,40 +237,88 @@ public class GestureDetection : MonoBehaviour
     }
 
     public void PinchGalleryArea() {
+        //Debug.Log("PinchGallery - PinchTimer: " + pinchTimer);
+        if (!pinchTimer) { pinchTimer = true; pinchCounter = 0; return; }
+        
         Vector3 pos = handModel.fingers[0].GetTipPosition();
         Debug.Log("selectedImages: " + selectedImages.Count);
         if (selectedImages.Count == 0) {
             //New Selection - single image only
-            foreach (SelectImage s in selectImage) {
-                if (s.Pinch(pos, 0) == 0) {
-                    selectedImages.Add(s);
-                    if (!selectionFromGallery) { selectionFromGallery = true; }                
-                    SpawnImages(pos);
-                    isPinching = true;
-                    break;
+            if (pinchCounter >= pinchFrames) {
+                Debug.Log("PinchDrag: 0");
+                
+                //Pinch and drag
+                
+            
+                foreach (SelectImage s in selectImage) {
+                    if (s.Pinch(pos, 1) == 1) {
+                        selectedImages.Add(s);
+                        if (!selectionFromGallery) { selectionFromGallery = true; }                
+                        SpawnImages(pos);
+                        isPinching = true;
+                        break;
+                    }
+                }
+            } else {
+                Debug.Log("Pinch Selected: 0");
+                
+                //Pinch select
+                foreach (SelectImage s in selectImage) {
+                    if (s.Pinch(pos, 1) == 1) {
+                        selectedImages.Add(s);
+                        if (!selectionFromGallery) { selectionFromGallery = true; }                
+                        //SpawnImages(pos);
+                        isPinching = true;
+                        break;
+                    }
                 }
             }
+            pinchCounter = 0;
+            pinchTimer = false;
         } else {
             //Multi selection in progress - if the pinch was on one of the selected items
             //then instantiate
-            bool pinchedSelected = false;
-            foreach (SelectImage s in selectedImages) {
-                if (s.PinchCheck(pos)) {
-                    SpawnImages(pos);
-                    pinchedSelected = true;
-                    isPinching = true;
-                    if (!selectionFromGallery) { selectionFromGallery = true; }
-                    break;
-                }
-            }
-            if (!pinchedSelected) {
-                //Pinch was not in correct area, cancel.
-                UnPinchGalleryArea();
-            } else {
-                //Disable highlight of images in gallery
+            if (pinchCounter >= pinchFrames) {
+                //Pinch drag
+                Debug.Log("PinchDrag: 1");
+                bool pinchedSelected = false;
                 foreach (SelectImage s in selectedImages) {
-                    if (s.IsSelected()) {
-                        s.DeSelect();
+                    if (s.PinchCheck(pos)) {
+                        SpawnImages(pos);
+                        pinchedSelected = true;
+                        isPinching = true;
+                        if (!selectionFromGallery) { selectionFromGallery = true; }
+                        break;
+                    }
+                }
+                if (!pinchedSelected) {
+                    //Pinch was not in correct area, cancel.
+                    pinchTimer = false;
+                    UnPinchGalleryArea();
+                } else {
+                    //Disable highlight of images in gallery
+                    foreach (SelectImage s in selectedImages) {
+                        if (s.IsSelected()) {
+                            s.DeSelect();
+                        }
+                    }
+                }
+            } else {
+                //Pinch select
+                Debug.Log("PinchSelect: 1");
+                pinchTimer = false;
+                pinchCounter = 0;
+                foreach (SelectImage s in selectImage) {
+                    if (s.PinchCheck(pos)) {
+                        //SpawnImages(pos);
+                        //pinchedSelected = true;
+                        s.Toggle();
+                        if (!s.IsSelected()) {
+                            selectedImages.Remove(s);
+                        } else {
+                            selectedImages.Add(s);
+                        }                        
+                        break;
                     }
                 }
             }
@@ -246,7 +326,20 @@ public class GestureDetection : MonoBehaviour
     }
 
     public void UnPinchGalleryArea() {
-        if (!selectionFromGallery) { return; }
+        Debug.Log("UnPinchGallery - PinchTimer: " + pinchTimer);
+        if (inGallery && pinchTimer) { PinchGalleryArea(); return; }
+        if (pinchTimer) { pinchTimer = false; pinchCounter = 0; }
+        
+        
+        if (!selectionFromGallery) { 
+            if (selectedImages.Count != 0) {
+                foreach (SelectImage s in selectedImages) {
+                    s.DeSelect();
+                }
+                selectedImages.Clear();
+            }
+            return;
+        }
         if (isPinching && parentPanel != null) { 
             DropGalleryImage(true);
         }
@@ -294,10 +387,13 @@ public class GestureDetection : MonoBehaviour
     // palm facing up - initializes timer 
     void CheckLoadImage() {
         float currentHandPos = handModel.fingers[0].GetTipPosition().y + cameraOffset.y;
-        if (isPalmUp && !imageLoaded) {
+        if (isPalmUp && !galleryToggled) {
             if (currentHandPos - tempHandPos >= 0.01) { // if the hand creates a moving up gesture
-                imageLoader.loadImage(); // load an image and count the number of loaded
-                imageLoaded = true;
+                //imageLoader.loadImage(); // load an image and count the number of loaded
+                //imageLoaded = true;
+                tg.Toggle();
+                galleryToggled = true;
+                
             }
         }
     }

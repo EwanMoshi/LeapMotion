@@ -20,12 +20,14 @@ public class GalleryTransition : MonoBehaviour {
 	}
     
     void OnTriggerEnter(Collider other) {
-        if (other != null) {
-            if (other.gameObject.name.Equals("bone3IL")) {
-                //Debug.Log("Left in Gallery");
+        if (other != null) {            
+            //if (other.gameObject.name.Equals("bone3IL")) {
+            if (other.gameObject.name.Equals("palmL")) {
+                Debug.Log("Left in Gallery");
                 leftHand.GalleryTrigger(on);
-            } else if (other.gameObject.name.Equals("bone3IR")) {
-                //Debug.Log("Right in Gallery");
+            //} else if (other.gameObject.name.Equals("bone3IR")) {
+            } else if  (other.gameObject.name.Equals("palmR")) {
+                Debug.Log("Right in Gallery");
                 rightHand.GalleryTrigger(on);
             }
         }

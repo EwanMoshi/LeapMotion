@@ -30,6 +30,10 @@ public class SelectImage : MonoBehaviour {
         highlight.SetActive(false);
     }
     
+    public void Toggle() {
+        highlight.SetActive(!highlight.activeSelf);
+    }
+    
     public bool PinchCheck(Vector3 pos) {
         Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(cam,pos);
         return RectTransformUtility.RectangleContainsScreenPoint(rt, screenPos, cam);
