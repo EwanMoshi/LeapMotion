@@ -35,6 +35,7 @@ namespace Leap.Unity{
   
     /** Updates the hand and its component parts by setting their positions and rotations. */
     public override void UpdateHand() {
+      Debug.Log("SkeletalHand.UpdateHand()");
       SetPositions();
     }
   

@@ -16,7 +16,7 @@ namespace Leap.Unity {
         return ModelType.Physics;
       }
     }
-    public float filtering = 0.5f;
+    public float filtering = 0.5f;    
 
     public override bool SupportsEditorPersistence() {
       return true;
@@ -36,8 +36,8 @@ namespace Leap.Unity {
 
       if (palm != null) {
         Rigidbody palmBody = palm.GetComponent<Rigidbody>();
-        if (palmBody) {
-          palmBody.MovePosition(GetPalmCenter());
+        if (palmBody) {          
+          palmBody.MovePosition(GetPalmPosition());
           palmBody.MoveRotation(GetPalmRotation());
         } else {
           palm.position = GetPalmCenter();

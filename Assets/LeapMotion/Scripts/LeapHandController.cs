@@ -76,7 +76,7 @@ namespace Leap.Unity {
     * @param modelType Filters for a type of hand model, for example, physics or graphics hands.
     * @param frame The Leap Frame containing Leap Hand data for each currently tracked hand
     */
-    void UpdateHandRepresentations(Dictionary<int, HandRepresentation> all_hand_reps, ModelType modelType, Frame frame) {
+    void UpdateHandRepresentations(Dictionary<int, HandRepresentation> all_hand_reps, ModelType modelType, Frame frame) {        
       foreach (Leap.Hand curHand in frame.Hands) {
         HandRepresentation rep;
         if (!all_hand_reps.TryGetValue(curHand.Id, out rep)) {

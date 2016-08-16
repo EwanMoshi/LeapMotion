@@ -75,8 +75,7 @@ public class GestureDetection : MonoBehaviour
         // only check if palm is up if we're not pinching, this is to avoid clashes 
         // with rotation when the palm might be facing up
         if (!isPinching && handModel.GetPalmNormal().y >= 0.1) {
-            if (isPalmUp) { }
-            else { // only store the position the first time the palm faces up
+            if (!isPalmUp) { // only store the position the first time the palm faces up
                 tempHandPos = handModel.fingers[0].GetTipPosition().y + cameraOffset.y; // store current hand position temporarily
                 isPalmUp = true;
             }
@@ -85,8 +84,7 @@ public class GestureDetection : MonoBehaviour
             isPalmUp = false;
             imageLoaded = false; // reset image loaded (used for when an image is loaded)
         }
-
-        //Debug.Log("Pinching: " + isPinching + ", selectionFromGallery: " + selectionFromGallery + ", parentPanel: " + parentPanel);
+        
         if (isPinching) {
             if (!inGallery && !selectionFromGallery) {
                     if (targetImage == null) { return; }
@@ -101,11 +99,6 @@ public class GestureDetection : MonoBehaviour
                     parentPanel.transform.position = pos + new Vector3(0,0,spawnOffsetZ);
                 }
             }
-        } else {
-            if (CalculatePointing()) {
-                //Pointing selection
-                
-            }
         }
     }
 
@@ -116,16 +109,6 @@ public class GestureDetection : MonoBehaviour
         }
         if (inGallery && !on) {
             inGallery = false;
-            
-            //Logic for transition from gallery (dragging selection...)
-
-            //If any images are selected create the 'full size' versions of them
-            //and attach them to the pinching hand in some fashion
-
-
-
-
-            //Cancel previous selection
         }
     }
 
@@ -151,7 +134,6 @@ public class GestureDetection : MonoBehaviour
         //Begins a pinch if requirements are met
         Vector3 pos = handModel.fingers[0].GetTipPosition() + cameraOffset;
         bool f = FindImage(pos);
-        //Debug.Log("Pinch: " + handedness + ", isPinching: " + isPinching + ", Image: " + f + ", pos: " + pos);
 
         if (!isPinching && f) {
             //Hand has pinched an image
@@ -201,9 +183,11 @@ public class GestureDetection : MonoBehaviour
             Vector3 imgPos = new Vector3(pos.x + imgSize * offset, pos.y, pos.z + spawnOffsetZ);
             imagePanels[i] = (GameObject)Instantiate(imagePanelPrefab, imgPos, Quaternion.identity);
             imagePanels[i].transform.localScale *= imgSize;
+            //imagePanels[i].transform.Rotate(new Vector3(0,180,0));
             
             if (s.raw != null) {
-                imagePanels[i].GetComponent<MeshRenderer>().material.mainTexture = s.raw.mainTexture;
+                imagePanels[i].transform.Find("Image").GetComponent<MeshRenderer>().materials[1].mainTexture = s.raw.mainTexture;
+                //imagePanels[i].GetComponentsInChildren<MeshRenderer>()[0].materials[1].mainTexture = s.raw.mainTexture;
             }
             if (offset == 0) {
                 //Make panels follow the 'center' panel (not fixed for even):
@@ -270,8 +254,6 @@ public class GestureDetection : MonoBehaviour
 
 
     void OnDisable() {
-        //ReleasePoint(true);
-        //ReleasePinch(true);
         UnPinchDrawingArea();
         UnPinchGalleryArea();
         inGallery = false;
@@ -293,7 +275,7 @@ public class GestureDetection : MonoBehaviour
     }
 
     
-    private bool CalculatePointing() {
+    /* private bool CalculatePointing() {
         Vector3 indexDirection = handModel.fingers[1].GetBoneDirection(3);
         Vector3 middleDirection = handModel.fingers[2].GetBoneDirection(3);
         Vector3 ringDirection = handModel.fingers[3].GetBoneDirection(3);
@@ -306,7 +288,7 @@ public class GestureDetection : MonoBehaviour
         else {
             return false;
         }
-    }
+    } */
 
 
     // palm facing up - initializes timer 

@@ -21,10 +21,10 @@ public class InteractableObject : MonoBehaviour {
     Vector3 drag2;
     
     public float rotationMin = 2;    
-    public float rotationScale = 0.2f;   
+    public float rotationScale = 0.2f;
+    float rotation;
     
-    
-    GameObject highlight;
+    public GameObject highlight;
     
     
 
@@ -47,6 +47,10 @@ public class InteractableObject : MonoBehaviour {
             if (drag1.y >= 0 && drag2.y >= 0 || drag1.y < 0 && drag2.y < 0) { drag1.y = drag2.y = 0; }
             if (drag1.x == 0 && drag2.x == 0 && drag1.y == 0 && drag2.y == 0) { return; }
             
+            
+            
+            
+            
             //Rather than have the hands fight over who is scaling the object,
             //the hand with the largest distance travelled scales the object
             float c1 = Mathf.Abs(drag1.x) + Mathf.Abs(drag1.y);
@@ -62,6 +66,13 @@ public class InteractableObject : MonoBehaviour {
                 dir = drag2;
                 pos = hand2;
             }
+            
+            /* if (rotation != 0) {
+                float xr = dir.x * Mathf.Cos(rotation) - dir.y * Mathf.Sin(rotation);
+                float yr = dir.x * Mathf.Sin(rotation) + dir.y * Mathf.Cos(rotation);
+                dir = new Vector3(xr, yr, dir.z);
+            } */
+            
             //dir = img.InverseTransformDirection(dir);
             //pos = img.InverseTransformDirection(pos);
             
@@ -206,11 +217,14 @@ public class InteractableObject : MonoBehaviour {
         if (id == 1) { hand2 = pos; }
         
         //Debug.Log("ModAngel: " + modAngle + ", Angle: " + angle);
-        Debug.Log("zAngle: " + zAngle + ", Angle: " + angle);
+        //Debug.Log("zAngle: " + zAngle + ", Angle: " + angle);
         
         //Rotate
         //img.Rotate(new Vector3(0,0,modAngle));
         img.Rotate(new Vector3(0,0,angle));
+        rotation += angle;
+        if (rotation > 360) { rotation -= 360; }
+        if (rotation < -360) { rotation += 360; }
         return true;
     }
 

@@ -60,8 +60,8 @@ namespace Leap.Unity{
     /** Calculates the position of the palm in global coordinates.
     * @returns A Vector3 containing the Unity coordinates of the palm position.
     */
-    public Vector3 GetPalmPosition() {
-      return hand_.PalmPosition.ToVector3();
+    public Vector3 GetPalmPosition() {                 
+      return hand_.PalmPosition.ToVector3()*1.3f;
     }
 
     /** Calculates the rotation of the hand in global coordinates.
