@@ -15,7 +15,8 @@ public class SelectImage : MonoBehaviour {
         rt = GetComponent<RectTransform>();
         canvasRT = GameObject.Find("GalleryUI").GetComponent<RectTransform>();
         highlight = transform.Find("Highlight").gameObject;
-        cam = GameObject.Find("GalleryCamera").GetComponent<Camera>();
+        //cam = GameObject.Find("GalleryCamera").GetComponent<Camera>();
+        cam = GameObject.Find("Main Camera").GetComponent<Camera>();
         if (raw == null) { raw = GetComponentInChildren<RawImage>(); }
     }
     
@@ -40,7 +41,9 @@ public class SelectImage : MonoBehaviour {
     }
     
     public int Pinch(Vector3 pos, int force = -1) {
+        //pos.x *= (60/45);
         Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(cam,pos);
+        screenPos.x *= (60/45);
         //Debug.Log("Pinch Gallery - ScreenPos: " + screenPos + ", Pos: " + pos);
         if (test != null) { test.position = pos; }
         if (RectTransformUtility.RectangleContainsScreenPoint(rt, screenPos, cam)) {

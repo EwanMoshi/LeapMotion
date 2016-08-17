@@ -9,6 +9,7 @@ namespace Leap.Unity {
   public class LeapHandController : MonoBehaviour {
     protected LeapProvider provider;
     protected HandFactory factory;
+    Controller controller;
 
     protected Dictionary<int, HandRepresentation> graphicsReps = new Dictionary<int, HandRepresentation>();
     protected Dictionary<int, HandRepresentation> physicsReps = new Dictionary<int, HandRepresentation>();
@@ -18,6 +19,8 @@ namespace Leap.Unity {
 
     protected bool graphicsEnabled = true;
     protected bool physicsEnabled = true;
+
+
 
     public bool GraphicsEnabled {
       get {
@@ -46,12 +49,12 @@ namespace Leap.Unity {
     protected virtual void Start() {
       provider = requireComponent<LeapProvider>();
       factory = requireComponent<HandFactory>();
+      controller = ((LeapServiceProvider)(provider)).GetLeapController();
     }
 
     /** Updates the graphics HandRepresentations. */
     protected virtual void Update() {
       Frame frame = provider.CurrentFrame;
-
       if (frame != null && graphicsEnabled) {
         UpdateHandRepresentations(graphicsReps, ModelType.Graphics, frame);
       }
@@ -65,27 +68,67 @@ namespace Leap.Unity {
         UpdateHandRepresentations(physicsReps, ModelType.Physics, fixedFrame);
       }
     }
+    
+    Hand CloneHand(Frame frame, Hand curHand) {
+        return new Hand(frame.Id, curHand.Id, curHand.Confidence, curHand.GrabStrength, curHand.GrabAngle, curHand.PinchStrength, curHand.PinchDistance, curHand.PalmWidth, curHand.IsLeft, curHand.TimeVisible, curHand.Arm, curHand.Fingers, curHand.PalmPosition, curHand.StabilizedPalmPosition, curHand.PalmVelocity, curHand.PalmNormal, curHand.Direction, curHand.WristPosition);
+    }
 
-    /** 
+    /**
     * Updates HandRepresentations based in the specified HandRepresentation Dictionary.
     * Active HandRepresentation instances are updated if the hand they represent is still
     * present in the Provider's CurrentFrame; otherwise, the HandRepresentation is removed. If new
-    * Leap Hand objects are present in the Leap HandRepresentation Dictionary, new HandRepresentations are 
-    * created and added to the dictionary. 
+    * Leap Hand objects are present in the Leap HandRepresentation Dictionary, new HandRepresentations are
+    * created and added to the dictionary.
     * @param all_hand_reps = A dictionary of Leap Hand ID's with a paired HandRepresentation
     * @param modelType Filters for a type of hand model, for example, physics or graphics hands.
     * @param frame The Leap Frame containing Leap Hand data for each currently tracked hand
     */
-    void UpdateHandRepresentations(Dictionary<int, HandRepresentation> all_hand_reps, ModelType modelType, Frame frame) {        
-      foreach (Leap.Hand curHand in frame.Hands) {
+    float scale = 2f;
+    Dictionary<string, Vector> lastPos = new Dictionary<string, Vector>();
+    void UpdateHandRepresentations(Dictionary<int, HandRepresentation> all_hand_reps, ModelType modelType, Frame frame) {
+      for (int i = 0; i < frame.Hands.Count; i++) {
+        Leap.Hand curHand = frame.Hands[i];
+        //Change hand movement scaling
+
         HandRepresentation rep;
-        if (!all_hand_reps.TryGetValue(curHand.Id, out rep)) {
+        string posId = "" + curHand.Id;
+        if (modelType == ModelType.Graphics) {
+            posId += "g";
+        } else {
+            posId += "p";
+        }        
+        if (!all_hand_reps.TryGetValue(curHand.Id, out rep)) { 
+          lastPos.Add(posId, curHand.PalmPosition);
           rep = factory.MakeHandRepresentation(curHand, modelType);
           if (rep != null) {
             all_hand_reps.Add(curHand.Id, rep);
           }
         }
-        if (rep != null) {
+        if (rep != null) {            
+            if (controller != null) {
+                Vector oldPos = lastPos[posId];
+                oldPos.z = 0;                
+                Vector curPos = curHand.PalmPosition;
+                curPos.z = 0;
+                //Hand is valid and was valid last frame - adjust
+                Vector positionalChange = curPos - oldPos;                
+                //Debug.Log("curPos: " + curPos + ", old: " + oldPos);                
+                Vector newPosition = oldPos + positionalChange * scale;
+                newPosition.z = curHand.PalmPosition.z;
+                Vector translation = newPosition - curPos;                
+                //curHand.PalmPosition = newPosition;
+                //Debug.LogError("Move: " + translation + ", newpos?: " + newPosition);
+                Vector zero = new Vector(0,0,0);
+                //Vector one = new Vector(1,1,1);
+                /* if (translation != zero) { Debug.LogError("Move: " + translation + ", newPos: " + newPosition); } */
+                //curHand = curHand.TransformedCopy(new LeapTransform(translation, curHand.Rotation, zero));
+                //curHand = curHand.TransformedCopy(new LeapTransform(newPosition, curHand.Rotation, one));
+                //curHand = new Hand(frame.Id, curHand.Id, curHand.Confidence, curHand.GrabStrength, curHand.GrabAngle, curHand.PinchStrength, curHand.PinchDistance, curHand.PalmWidth, curHand.IsLeft, curHand.TimeVisible, curHand.Arm, curHand.Fingers, newPosition, curHand.StabilizedPalmPosition, curHand.PalmVelocity, curHand.PalmNormal, curHand.Direction, curHand.WristPosition);
+                
+                
+                lastPos[posId] = curHand.PalmPosition;
+                //Debug.Log("newCur: " + curHand.PalmPosition + ", targetWas: " + newPosition);
+            }
           rep.IsMarked = true;
           rep.UpdateRepresentation(curHand);
           rep.LastUpdatedTime = (int)frame.Timestamp;
@@ -105,7 +148,7 @@ namespace Leap.Unity {
           }
         }
       }
-      /**Inform the representation that we will no longer be giving it any hand updates 
+      /**Inform the representation that we will no longer be giving it any hand updates
        * because the corresponding hand has gone away */
       if (toBeDeleted != null) {
         all_hand_reps.Remove(toBeDeleted.HandID);

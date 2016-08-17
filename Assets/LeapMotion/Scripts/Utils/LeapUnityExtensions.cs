@@ -7,6 +7,8 @@
 using UnityEngine;
 using System.Collections;
 using LeapInternal;
+using System.Collections.Generic;
+
 
 namespace Leap.Unity {
 
@@ -134,8 +136,8 @@ namespace Leap.Unity {
      * transformation changes the coordinate system from right- to left-handed and converts units from millimeters to meters
      * by scaling.
      * @returns A Leap.LeapTransform object representing the specified transform from Leap Motion into Unity space.
-     */
-    public static LeapTransform GetLeapMatrix(this Transform t) {
+     */    
+    public static LeapTransform GetLeapMatrix(this Transform t) {            
       Vector scale = new Vector(t.lossyScale.x * MM_TO_M, t.lossyScale.y * MM_TO_M, t.lossyScale.z * MM_TO_M);
       LeapTransform transform = new LeapTransform(t.position.ToVector(), t.rotation.ToLeapQuaternion(), scale);
       transform.MirrorZ(); // Unity is left handed.

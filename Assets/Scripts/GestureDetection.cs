@@ -23,7 +23,7 @@ public class GestureDetection : MonoBehaviour
     Transform parentPanel;
 
     Vector3 cameraOffset = new Vector3(-50,-50,0);
-    Vector3 origin = new Vector3(0,0,-10);
+    Vector3 origin = new Vector3(0,-0.066f,-10);
     Vector3 rot;
 
     int layerMask = (1 << 9);                           //Used for raycasting between hands and images
@@ -51,6 +51,10 @@ public class GestureDetection : MonoBehaviour
     ToggleGallery tg;
 
     void Start() {
+        //origin = Camera.main.transform.position;
+        origin = GameObject.Find("Main Camera").transform.position;
+        cameraOffset = GameObject.Find("DrawingCamera").transform.position - origin;
+        
         id = (int)handedness;
         origin += cameraOffset;
         if (selectImage == null || selectImage.Length == 0) {
@@ -92,7 +96,7 @@ public class GestureDetection : MonoBehaviour
         
         if (pinchTimer) {
             if (pinchCounter == pinchFrames) {
-                Debug.Log("Update Pincher");
+                //Debug.Log("Update Pincher");
                 PinchGalleryArea();
                 pinchCounter = 0;
                 pinchTimer = false;
@@ -210,7 +214,7 @@ public class GestureDetection : MonoBehaviour
         imagePanels = new GameObject[selectedImages.Count];
         int i = 0;        
         foreach (SelectImage s in selectedImages) {
-            Debug.Log("selectedImages: " + s.gameObject.name);
+            //Debug.Log("selectedImages: " + s.gameObject.name);
             int offset = i - selectedImages.Count / 2;
             Vector3 imgPos = new Vector3(pos.x + imgSize * offset * .6f, pos.y, pos.z + spawnOffsetZ);
             imagePanels[i] = (GameObject)Instantiate(imagePanelPrefab, imgPos, Quaternion.identity);
@@ -241,7 +245,7 @@ public class GestureDetection : MonoBehaviour
         if (!pinchTimer) { pinchTimer = true; pinchCounter = 0; return; }
         
         Vector3 pos = handModel.fingers[0].GetTipPosition();
-        Debug.Log("selectedImages: " + selectedImages.Count);
+        //Debug.Log("selectedImages: " + selectedImages.Count);
         if (selectedImages.Count == 0) {
             //New Selection - single image only
             if (pinchCounter >= pinchFrames) {
@@ -280,7 +284,7 @@ public class GestureDetection : MonoBehaviour
             //then instantiate
             if (pinchCounter >= pinchFrames) {
                 //Pinch drag
-                Debug.Log("PinchDrag: 1");
+                //Debug.Log("PinchDrag: 1");
                 bool pinchedSelected = false;
                 foreach (SelectImage s in selectedImages) {
                     if (s.PinchCheck(pos)) {
@@ -305,7 +309,7 @@ public class GestureDetection : MonoBehaviour
                 }
             } else {
                 //Pinch select
-                Debug.Log("PinchSelect: 1");
+                //Debug.Log("PinchSelect: 1");
                 pinchTimer = false;
                 pinchCounter = 0;
                 foreach (SelectImage s in selectImage) {
@@ -326,7 +330,7 @@ public class GestureDetection : MonoBehaviour
     }
 
     public void UnPinchGalleryArea() {
-        Debug.Log("UnPinchGallery - PinchTimer: " + pinchTimer);
+        //Debug.Log("UnPinchGallery - PinchTimer: " + pinchTimer);
         if (inGallery && pinchTimer) { PinchGalleryArea(); return; }
         if (pinchTimer) { pinchTimer = false; pinchCounter = 0; }
         
@@ -356,7 +360,7 @@ public class GestureDetection : MonoBehaviour
         //Raycast from index finger position along the +z axis
         RaycastHit hit;
         Physics.Raycast(origin, pos-origin, out hit, pinchDepth, layerMask);
-        if (hit.collider != null) { Debug.Log("Hit: " + hit.collider.name); }
+        //if (hit.collider != null) { Debug.Log("Hit: " + hit.collider.name); }
         //Debug.DrawRay(origin, pos-origin, Color.blue, 5);
 
         if (hit.collider != null) {

@@ -289,11 +289,8 @@ namespace Leap.Unity {
 
           leapTransform = new LeapTransform(warpedPosition.ToVector(), warpedRotation.ToLeapQuaternion(), transform.lossyScale.ToVector() * 1e-3f);
           leapTransform.MirrorZ();
-        } else {
-          float scale = 2f;
-          leapTransform = transform.GetLeapMatrix();
-          leapTransform.translation = new Vector(leapTransform.translation.x * 100, leapTransform.translation.y, leapTransform.translation.z);
-          //Debug.Log("leap: " + leapTransform.translation);
+        } else {          
+          leapTransform = transform.GetLeapMatrix();          
         }        
         toUpdate = source.TransformedCopy(leapTransform);
       }

@@ -24,7 +24,7 @@ public class ToggleGallery : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         downPos = slidePanel.localPosition;
-        Debug.Log(downPos + ", " + galleryBG.localPosition);
+        //Debug.Log(downPos + ", " + galleryBG.localPosition);
 	}
 	
 	// Update is called once per frame
@@ -33,10 +33,10 @@ public class ToggleGallery : MonoBehaviour {
             float t = stepCount / (steps + 0.0f);
             if (up) { 
                 slidePanel.localPosition = new Vector3(slidePanel.localPosition.x,Mathf.Lerp(slideB, slideT, t), slidePanel.localPosition.z);
-                galleryBG.localPosition = new Vector3(galleryBG.localPosition.x,Mathf.Lerp(bgB, bgT, t), galleryBG.localPosition.z);
+                galleryBG.localPosition = new Vector3(galleryBG.localPosition.x,Mathf.Lerp(slideB, slideT, t), galleryBG.localPosition.z);
             } else {
                 slidePanel.localPosition = new Vector3(slidePanel.localPosition.x,Mathf.Lerp(slideT, slideB, t), slidePanel.localPosition.z);
-                galleryBG.localPosition = new Vector3(galleryBG.localPosition.x,Mathf.Lerp(bgT, bgB, t), galleryBG.localPosition.z);
+                galleryBG.localPosition = new Vector3(galleryBG.localPosition.x,Mathf.Lerp(slideT, slideB, t), galleryBG.localPosition.z);
             }
             if (stepCount == steps) {
                 stepCount = 0;
