@@ -6,6 +6,7 @@ public class InteractableObject : MonoBehaviour {
 
     //public bool Debug = false;
     public Transform img;           //The image this script controls
+    public Transform scaleTarget;   //Top most parent object, used for scaling
     
     enum Hands {None, Left, Right, Both};
     Hands hands;                    //Moving + Scaling
@@ -47,10 +48,6 @@ public class InteractableObject : MonoBehaviour {
             if (drag1.y >= 0 && drag2.y >= 0 || drag1.y < 0 && drag2.y < 0) { drag1.y = drag2.y = 0; }
             if (drag1.x == 0 && drag2.x == 0 && drag1.y == 0 && drag2.y == 0) { return; }
             
-            
-            
-            
-            
             //Rather than have the hands fight over who is scaling the object,
             //the hand with the largest distance travelled scales the object
             float c1 = Mathf.Abs(drag1.x) + Mathf.Abs(drag1.y);
@@ -80,28 +77,28 @@ public class InteractableObject : MonoBehaviour {
             float x = 0, y = 0;
             x = dir.x*2;
             if (dir.x > 0) {
-                if (pos.x < img.position.x) {
+                if (pos.x < scaleTarget.position.x) {
                     x = -x;
                 }
             } else if (dir.x < 0) {
-                if (pos.x < img.position.x) {
+                if (pos.x < scaleTarget.position.x) {
                     x = -x;
                 }
             }
             y = dir.y*2;
             if (dir.y > 0) {
-                if (pos.y < img.position.y) {
+                if (pos.y < scaleTarget.position.y) {
                     y = -y;
                 }
             } else if (dir.y < 0) {
-                if (pos.y < img.position.y) {
+                if (pos.y < scaleTarget.position.y) {
                     y = -y;
                 }
             }
             
             //Debug.Log("dir.x: " + dir.x + ", pos.x: " + pos.x + ", x: " + x);
             //Append scale change
-            img.localScale += new Vector3(x, y, 0);
+            scaleTarget.localScale += new Vector3(x, y, 0);
             drag1 = drag2 = Vector3.zero;
         }
     }
@@ -215,9 +212,6 @@ public class InteractableObject : MonoBehaviour {
         //Continue to update drag position for smoothness
         if (id == 0) { hand1 = pos; }
         if (id == 1) { hand2 = pos; }
-        
-        //Debug.Log("ModAngel: " + modAngle + ", Angle: " + angle);
-        //Debug.Log("zAngle: " + zAngle + ", Angle: " + angle);
         
         //Rotate
         //img.Rotate(new Vector3(0,0,modAngle));

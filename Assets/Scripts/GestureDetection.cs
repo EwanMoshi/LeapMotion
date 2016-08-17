@@ -222,7 +222,7 @@ public class GestureDetection : MonoBehaviour
             //imagePanels[i].transform.Rotate(new Vector3(0,180,0));
             
             if (s.raw != null) {
-                imagePanels[i].transform.Find("Image").GetComponent<MeshRenderer>().materials[1].mainTexture = s.raw.mainTexture;
+                imagePanels[i].transform.Find("Buffer").Find("Image").GetComponent<MeshRenderer>().materials[1].mainTexture = s.raw.mainTexture;
                 //imagePanels[i].GetComponentsInChildren<MeshRenderer>()[0].materials[1].mainTexture = s.raw.mainTexture;
             }
             if (offset == 0) {
