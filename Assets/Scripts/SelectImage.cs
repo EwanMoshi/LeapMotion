@@ -10,6 +10,8 @@ public class SelectImage : MonoBehaviour {
     Camera cam;
     public Transform test;
     public RawImage raw;
+    
+    
 	
     void Start() {
         rt = GetComponent<RectTransform>();
@@ -20,8 +22,7 @@ public class SelectImage : MonoBehaviour {
         if (raw == null) { raw = GetComponentInChildren<RawImage>(); }
     }
     
-    void Update() {         
-    }
+   
     
     public bool IsSelected() {
         return highlight.activeSelf;

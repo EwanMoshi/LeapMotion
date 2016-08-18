@@ -2,32 +2,40 @@
 using System.Collections;
 
 public class ToggleGallery : MonoBehaviour {
-
+    /**
+        This script controls the raising (and collapsing) of the gallery UI window that contains
+        the images.
+    */
+    
+    //The two UI objects that are manipulated.
     public Transform galleryBG;
     public Transform slidePanel;
     
     bool raised = false;    
     bool raising = false;
-    Vector3 downPos;
+    //Vector3 downPos;
     bool up = true;
-    int steps = 10;
+    int steps = 20;
     int stepCount = 0;
-    float top = -0.6f;
-    float bottom = -1.4f;
-    
     float slideT = -455;
     float slideB = -578.2f;
-    float bgT = -91;
-    float bgB = -214.2f;
+    bool preFix = true;
+    bool done = false;
     
-    
-	// Use this for initialization
-	void Start () {
-        downPos = slidePanel.localPosition;
-        //Debug.Log(downPos + ", " + galleryBG.localPosition);
+	
+	void Start () {        
+        //downPos = slidePanel.localPosition;
+        if (preFix) {
+            slideT = slidePanel.localPosition.y;            
+            slideB = slideT - 200;
+            Vector3 v = slidePanel.localPosition;
+            v.y = slideB;
+            slidePanel.localPosition = v;            
+            galleryBG.localPosition = v;
+        }
 	}
 	
-	// Update is called once per frame
+	
 	void Update () {
         if (raising) {
             float t = stepCount / (steps + 0.0f);
@@ -42,11 +50,16 @@ public class ToggleGallery : MonoBehaviour {
                 stepCount = 0;
                 if (up) { raised = true; } else { raised = false; }
                 raising = false;
+                done = true;
                 return;
             }
             stepCount++;
         }
 	}
+    
+    public bool IsToggled() {
+        return done;
+    }
     
     public void Toggle() {
         if (raising) { return; }

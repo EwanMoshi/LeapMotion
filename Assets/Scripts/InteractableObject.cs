@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class InteractableObject : MonoBehaviour {
 
@@ -27,19 +28,168 @@ public class InteractableObject : MonoBehaviour {
     
     public GameObject highlight;
     
-    
+    //Vars for handling image incorrect placement fading
+    float redTime = 30;
+    float destroyStart = 10;
+    float destroyTime = 60;
+    float counter = 0;
+    Color red = new Color(.2f,0,.05f);    
+    //MeshRenderer[] rends;
+    List<MeshRenderer> rends;
+    GameObject top;
+    Dictionary<Transform, Vector3> attachedObjects;
+    int attachTimer = 0;
+    public ParticleSystem[] pss;
+    int hoverCounter;
+    bool hover = false;
+    bool canHover = false;
 
     void Start() {        
         if (img == null) {
             img = transform.parent.transform;
         }
-        if (highlight == null) {
-            highlight = transform.Find("Highlight").gameObject;
+        Transform t = transform;
+        while (t.parent != null) {
+            t = t.parent;
+        }
+        top = t.gameObject;
+        pss = top.GetComponentsInChildren<ParticleSystem>();
+        foreach (ParticleSystem ps in pss) {
+            ps.gameObject.SetActive(false);                
+            //Debug.Log(ps.gameObject.activeSelf);
+        }
+        
+    }
+    
+    public void FadeDestroy() {
+        //Fade out and then destroy the gameObject with this script + any attached items
+        
+        //First find top most parent        
+        
+        rends = new List<MeshRenderer>();
+        //Then find all MeshRenderers and setup update timer
+        foreach (KeyValuePair<Transform,Vector3> pair in attachedObjects) {
+            Transform t = pair.Key;
+            while (t.parent != null) {
+                t = t.parent;
+            }
+            rends.AddRange(t.GetComponentsInChildren<MeshRenderer>());
+        }
+        counter = 0;
+    }
+    
+    public void UnAttachAll() {
+        attachedObjects = null;
+    }
+    
+    public void AttachObject(Transform t, Vector3 xOffset) {
+        if (t == transform) { return; }
+        if (attachedObjects == null) {
+            attachedObjects = new Dictionary<Transform, Vector3>();
+        }
+        //As using transform.parent broke localScale upon unattaching, an alternative is needed
+        attachedObjects[t] = -xOffset;
+        attachTimer = 2;
+    }
+    
+    void AttachedObjectStepper() {
+        foreach (KeyValuePair<Transform,Vector3> pair in attachedObjects) {
+            pair.Key.position = top.transform.position + pair.Value;
+        }
+    }
+    
+    public void EnableHover() {
+        canHover = true;
+    }
+    
+    void FadeDestroyStepper() {
+        float t = 0;
+            if (counter < redTime) {
+                //Transition to red
+                t = counter / (redTime+0.0f);
+                foreach (MeshRenderer r in rends) {
+                    foreach (Material m in r.materials) {
+                        //Quadratic like this...
+                        m.color = Color.Lerp(m.color, red, t);
+                    }
+                }
+            }
+            if ( counter < destroyStart || counter < destroyTime) {
+                //Fade out
+                t = (counter - destroyStart) / (destroyTime - destroyStart + 0.0f);
+                foreach (MeshRenderer r in rends) {
+                    foreach (Material m in r.materials) {
+                        //Quadratic like this...                        
+                        Color c = m.color;
+                        c.a = Mathf.Lerp(c.a, 0, t);
+                        m.color = c;
+                    }
+                }
+            } else {
+                //Destroy
+                rends = null;
+                if (attachedObjects != null) {
+                    foreach (KeyValuePair<Transform,Vector3> pair in attachedObjects) {
+                        Destroy(pair.Key.gameObject);
+                    }
+                }
+                Destroy(top);
+            }
+            counter++;
+    }
+    
+    public void Hover() {        
+        if (pss == null || !canHover) { return; }        
+        foreach (ParticleSystem ps in pss) {
+            ps.gameObject.SetActive(true);
+        }        
+        hoverCounter = 5;
+        hover = true;
+    }
+    
+    void PinchParticles() {
+        if (pss == null) { return; }
+        foreach (ParticleSystem ps in pss) {
+            ps.startColor = Color.green;
+        }
+    }
+    
+    void UnPinchParticles() {
+        if (pss == null) { return; }
+        foreach (ParticleSystem ps in pss) {
+            ps.startColor = Color.white;
         }
     }
     
     
+    
     void Update() {
+        if (pss != null) {            
+            if (hover) {
+                if (hoverCounter == 0) {
+                    foreach (ParticleSystem ps in pss) {
+                        ps.gameObject.SetActive(false);                 
+                    }
+                    hover = false;
+                } else {
+                    hoverCounter--;
+                }
+            }
+        }
+        
+        //Destroy object
+        if (rends != null) {
+            FadeDestroyStepper();
+            return;
+        }
+        
+        if (attachedObjects != null && attachedObjects.Count != 0) {
+            if (attachTimer != 0) { attachTimer--; }
+            else {
+                AttachedObjectStepper();
+            }
+        }
+        
         //Scaling is done here.
         if (hands == Hands.Both) {
             //Drag motion is restricted to only trigger when both hands are moving in opposing directions
@@ -64,15 +214,6 @@ public class InteractableObject : MonoBehaviour {
                 pos = hand2;
             }
             
-            /* if (rotation != 0) {
-                float xr = dir.x * Mathf.Cos(rotation) - dir.y * Mathf.Sin(rotation);
-                float yr = dir.x * Mathf.Sin(rotation) + dir.y * Mathf.Cos(rotation);
-                dir = new Vector3(xr, yr, dir.z);
-            } */
-            
-            //dir = img.InverseTransformDirection(dir);
-            //pos = img.InverseTransformDirection(pos);
-            
             //Determine which direction to scale the object
             float x = 0, y = 0;
             x = dir.x*2;
@@ -96,16 +237,13 @@ public class InteractableObject : MonoBehaviour {
                 }
             }
             
-            //Debug.Log("dir.x: " + dir.x + ", pos.x: " + pos.x + ", x: " + x);
             //Append scale change
             scaleTarget.localScale += new Vector3(x, y, 0);
             drag1 = drag2 = Vector3.zero;
         }
     }
     
-    public bool Pinch(Vector3 pos, int id) {
-        //Debug.Log("Pinch: " + id);
-        //if (pointingHands != Hands.None) { return false; }
+    public bool Pinch(Vector3 pos, int id) {        
         //Setup pinch original location
         if (id == 0) {
             if (hands == Hands.None) { hands = Hands.Left; }
@@ -116,11 +254,14 @@ public class InteractableObject : MonoBehaviour {
             else if (hands == Hands.Left) { hands = Hands.Both; }
             hand2 = pos;
         }
-        //Enable highlight
-        if (!highlight.activeSelf) {
-            highlight.SetActive(true);
-        }
         
+        PinchParticles();
+        //Enable highlight
+        if (highlight != null) {
+            if (!highlight.activeSelf) {
+                highlight.SetActive(true);
+            }
+        }
         //Always true... yay?
         return true;
     }
@@ -136,9 +277,11 @@ public class InteractableObject : MonoBehaviour {
             else if (hands == Hands.Both) { hands = Hands.Left; }            
         } 
         if (hands == Hands.None) {
-            highlight.SetActive(false);
+            UnPinchParticles();
+            if (highlight != null) { 
+                highlight.SetActive(false);
+            }
         }
-        
     }
      
     
@@ -157,14 +300,15 @@ public class InteractableObject : MonoBehaviour {
 
         //Project both positions onto the same xy axis at the z location of the image        
         Vector3 posMod = pos - origin;
-        float zDif = (img.position - origin).z / posMod.z;        
+        float zDif = (scaleTarget.position - origin).z / posMod.z;        
         posMod = posMod*zDif;
         //Debug.LogError("zDif: " + zDif + ", pos: " + pos.x + "," + pos.y + "," + pos.z + " , posMod: " + posMod.x + "," + posMod.y + "," + posMod.z);
         Vector3 startMod = dragStart - origin;
-        zDif = (img.position - origin).z / startMod.z;
+        zDif = (scaleTarget.position - origin).z / startMod.z;
         startMod = startMod*zDif;
         //Debug.LogError("zDif: " + zDif + ", dragStart: " + dragStart.x + "," + dragStart.y + "," + dragStart.z + " , startMod: " + startMod.x + "," + startMod.y + "," + startMod.z);
         Vector3 dragDistance = posMod - startMod;
+        //Debug.Log("dragDistance: " + dragDistance.x + ", " + dragDistance.y + ", " + dragDistance.z);
         
         
         //Apply the z movement unscaled
@@ -172,7 +316,7 @@ public class InteractableObject : MonoBehaviour {
             
         if (hands != Hands.Both) {
             //Move to new position            
-            img.position += dragDistance;
+            scaleTarget.position += dragDistance;
         } else {
             //Scale (on next update)
             if (id == 0) {
@@ -184,29 +328,30 @@ public class InteractableObject : MonoBehaviour {
     }
 
     public bool Rotate(Vector3 pos, float zAngle, int id) {
-        if (id == 0 && hands != Hands.Left || id == 1 && hands != Hands.Right) { return false; }
+        if (id == 0 && hands != Hands.Left || id == 1 && hands != Hands.Right) { return false; }        
         
         //Assuming the original rotation to be 0 (or 360 if required) seems to work well            
-        float angle = 0, min = 0;
+        float angle = 0;
         if (zAngle >= 180) { angle = 360 - zAngle; }
         else { angle = 0 - zAngle; }          
             
         //Scale rotation down and ignore if below threshold
         //Threshold depends upon hand and direction, i.e. easier to rotate hand away from body
         //Also adjusts angle by mininum, so it starts at 0
+        //angle *= rotationScale;
         angle *= rotationScale;
         if (id == 0) {
             angle -= 2;
         } else {
             angle += 2;
         }
+        
         if (Mathf.Abs(angle) < rotationMin) {
             return false;
         }
         
         //Ensure first acceptable rotation remains slow
         if (angle < 0) { angle += rotationMin; }
-        else { angle -= rotationMin; }
         
         
         //Continue to update drag position for smoothness
