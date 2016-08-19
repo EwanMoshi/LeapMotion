@@ -2,18 +2,21 @@
 using System.Collections;
 using System.Collections.Generic;
 
+/**
+    This class is attached to an object to allow the hands to interact with it.
+    Operations include dragging, scaling and rotation.
+*/
 public class InteractableObject : MonoBehaviour {
 
 
-    //public bool Debug = false;
-    public Transform img;           //The image this script controls
-    public Transform scaleTarget;   //Top most parent object, used for scaling
+    public Transform img;           //This now represents the top most gameObject of the ImagePanels
+    public Transform scaleTarget;   //This object is used to seperate scaling from rotation
+    public GameObject highlight;    //Replaced by particles
     
     enum Hands {None, Left, Right, Both};
-    Hands hands;                    //Moving + Scaling
-    Hands pointingHands;            //Rotation
-
-    //Offset for camera
+    Hands hands;                    //Used to determine which hand is interacting with this object    
+    
+    //Ofset for drawing area camera
     Vector3 origin = new Vector3(-50,-50,-10);
     
     //Used for storing locations and applying translations/scalings/rotations
@@ -22,11 +25,10 @@ public class InteractableObject : MonoBehaviour {
     Vector3 drag1;
     Vector3 drag2;
     
+    //Currently used values are 5 and 0.1f
     public float rotationMin = 2;    
     public float rotationScale = 0.2f;
     float rotation;
-    
-    public GameObject highlight;
     
     //Vars for handling image incorrect placement fading
     float redTime = 30;
@@ -34,11 +36,11 @@ public class InteractableObject : MonoBehaviour {
     float destroyTime = 60;
     float counter = 0;
     Color red = new Color(.2f,0,.05f);    
-    //MeshRenderer[] rends;
     List<MeshRenderer> rends;
-    GameObject top;
     Dictionary<Transform, Vector3> attachedObjects;
+    GameObject top;
     int attachTimer = 0;
+    
     public ParticleSystem[] pss;
     int hoverCounter;
     bool hover = false;
@@ -61,13 +63,10 @@ public class InteractableObject : MonoBehaviour {
         
     }
     
+    //Fade out and then destroy the gameObject with this script + any attached items
     public void FadeDestroy() {
-        //Fade out and then destroy the gameObject with this script + any attached items
-        
-        //First find top most parent        
-        
+        //Find all MeshRenderers and setup update timer
         rends = new List<MeshRenderer>();
-        //Then find all MeshRenderers and setup update timer
         foreach (KeyValuePair<Transform,Vector3> pair in attachedObjects) {
             Transform t = pair.Key;
             while (t.parent != null) {
@@ -78,66 +77,72 @@ public class InteractableObject : MonoBehaviour {
         counter = 0;
     }
     
+    //Updates fading image state
+    void FadeDestroyStepper() {
+        float t = 0;
+        if (counter < redTime) {
+            //Transition to red
+            t = counter / (redTime+0.0f);
+            foreach (MeshRenderer r in rends) {
+                foreach (Material m in r.materials) {
+                    //Quadratic like this...
+                    m.color = Color.Lerp(m.color, red, t);
+                }
+            }
+        }
+        if ( counter < destroyStart || counter < destroyTime) {
+            //Fade out
+            t = (counter - destroyStart) / (destroyTime - destroyStart + 0.0f);
+            foreach (MeshRenderer r in rends) {
+                foreach (Material m in r.materials) {
+                    //Quadratic like this...                        
+                    Color c = m.color;
+                    c.a = Mathf.Lerp(c.a, 0, t);
+                    m.color = c;
+                }
+            }
+        } else {
+            //Destroy
+            rends = null;
+            if (attachedObjects != null) {
+                foreach (KeyValuePair<Transform,Vector3> pair in attachedObjects) {
+                    Destroy(pair.Key.gameObject);
+                }
+            }
+            Destroy(top);
+        }
+        counter++;
+    }
+    
+    //Removes all gameObjects that are "attached" to this one
     public void UnAttachAll() {
         attachedObjects = null;
     }
     
+    //Attaches a gameObject to this, so they can be moved around - simulates transform.parent behaviour
     public void AttachObject(Transform t, Vector3 xOffset) {
         if (t == transform) { return; }
         if (attachedObjects == null) {
             attachedObjects = new Dictionary<Transform, Vector3>();
-        }
-        //As using transform.parent broke localScale upon unattaching, an alternative is needed
+        }        
         attachedObjects[t] = -xOffset;
         attachTimer = 2;
     }
     
+    //Update attached objects positions
     void AttachedObjectStepper() {
         foreach (KeyValuePair<Transform,Vector3> pair in attachedObjects) {
             pair.Key.position = top.transform.position + pair.Value;
         }
     }
     
+    //Allows hover particles to trigger
     public void EnableHover() {
         canHover = true;
     }
     
-    void FadeDestroyStepper() {
-        float t = 0;
-            if (counter < redTime) {
-                //Transition to red
-                t = counter / (redTime+0.0f);
-                foreach (MeshRenderer r in rends) {
-                    foreach (Material m in r.materials) {
-                        //Quadratic like this...
-                        m.color = Color.Lerp(m.color, red, t);
-                    }
-                }
-            }
-            if ( counter < destroyStart || counter < destroyTime) {
-                //Fade out
-                t = (counter - destroyStart) / (destroyTime - destroyStart + 0.0f);
-                foreach (MeshRenderer r in rends) {
-                    foreach (Material m in r.materials) {
-                        //Quadratic like this...                        
-                        Color c = m.color;
-                        c.a = Mathf.Lerp(c.a, 0, t);
-                        m.color = c;
-                    }
-                }
-            } else {
-                //Destroy
-                rends = null;
-                if (attachedObjects != null) {
-                    foreach (KeyValuePair<Transform,Vector3> pair in attachedObjects) {
-                        Destroy(pair.Key.gameObject);
-                    }
-                }
-                Destroy(top);
-            }
-            counter++;
-    }
     
+    //Triggers hover particles
     public void Hover() {        
         if (pss == null || !canHover) { return; }        
         foreach (ParticleSystem ps in pss) {
@@ -147,6 +152,7 @@ public class InteractableObject : MonoBehaviour {
         hover = true;
     }
     
+    //Changes particles to green when object is pinched
     void PinchParticles() {
         if (pss == null) { return; }
         foreach (ParticleSystem ps in pss) {
@@ -161,9 +167,8 @@ public class InteractableObject : MonoBehaviour {
         }
     }
     
-    
-    
     void Update() {
+        //Hover effect expires after 5 updates if not recalled
         if (pss != null) {            
             if (hover) {
                 if (hoverCounter == 0) {
@@ -183,6 +188,7 @@ public class InteractableObject : MonoBehaviour {
             return;
         }
         
+        //Handle attached objects
         if (attachedObjects != null && attachedObjects.Count != 0) {
             if (attachTimer != 0) { attachTimer--; }
             else {
@@ -190,7 +196,11 @@ public class InteractableObject : MonoBehaviour {
             }
         }
         
-        //Scaling is done here.
+        Scale();
+    }
+    
+    //Used to scale objects
+    void Scale() {        
         if (hands == Hands.Both) {
             //Drag motion is restricted to only trigger when both hands are moving in opposing directions
             //on at least one of the x and y axes.
@@ -243,6 +253,7 @@ public class InteractableObject : MonoBehaviour {
         }
     }
     
+    
     public bool Pinch(Vector3 pos, int id) {        
         //Setup pinch original location
         if (id == 0) {
@@ -255,20 +266,14 @@ public class InteractableObject : MonoBehaviour {
             hand2 = pos;
         }
         
+        //Visual effect
         PinchParticles();
-        //Enable highlight
-        if (highlight != null) {
-            if (!highlight.activeSelf) {
-                highlight.SetActive(true);
-            }
-        }
-        //Always true... yay?
         return true;
     }
     
     
     public void UnPinch(int id) {
-        //Debug.Log("UnPinch: " + id);
+        //Releases object
         if (id == 0) {        
             if (hands == Hands.Left) { hands = Hands.None; }
             else if (hands == Hands.Both) { hands = Hands.Right; }            
@@ -283,8 +288,8 @@ public class InteractableObject : MonoBehaviour {
             }
         }
     }
-     
     
+    //Object is dragged around screen based on difference between current and previous position
     public void Drag(Vector3 pos, int id) {        
         Vector3 dragStart;
         if (id == 0) {
@@ -301,21 +306,17 @@ public class InteractableObject : MonoBehaviour {
         //Project both positions onto the same xy axis at the z location of the image        
         Vector3 posMod = pos - origin;
         float zDif = (scaleTarget.position - origin).z / posMod.z;        
-        posMod = posMod*zDif;
-        //Debug.LogError("zDif: " + zDif + ", pos: " + pos.x + "," + pos.y + "," + pos.z + " , posMod: " + posMod.x + "," + posMod.y + "," + posMod.z);
+        posMod = posMod*zDif;        
         Vector3 startMod = dragStart - origin;
         zDif = (scaleTarget.position - origin).z / startMod.z;
         startMod = startMod*zDif;
-        //Debug.LogError("zDif: " + zDif + ", dragStart: " + dragStart.x + "," + dragStart.y + "," + dragStart.z + " , startMod: " + startMod.x + "," + startMod.y + "," + startMod.z);
         Vector3 dragDistance = posMod - startMod;
-        //Debug.Log("dragDistance: " + dragDistance.x + ", " + dragDistance.y + ", " + dragDistance.z);
-        
         
         //Apply the z movement unscaled
         dragDistance.z = pos.z - dragStart.z;
             
         if (hands != Hands.Both) {
-            //Move to new position            
+            //Move to new position       
             scaleTarget.position += dragDistance;
         } else {
             //Scale (on next update)
@@ -330,15 +331,14 @@ public class InteractableObject : MonoBehaviour {
     public bool Rotate(Vector3 pos, float zAngle, int id) {
         if (id == 0 && hands != Hands.Left || id == 1 && hands != Hands.Right) { return false; }        
         
-        //Assuming the original rotation to be 0 (or 360 if required) seems to work well            
+        //Assuming the original rotation to be 0 (or 360 if required) seems to work well
         float angle = 0;
         if (zAngle >= 180) { angle = 360 - zAngle; }
         else { angle = 0 - zAngle; }          
             
         //Scale rotation down and ignore if below threshold
         //Threshold depends upon hand and direction, i.e. easier to rotate hand away from body
-        //Also adjusts angle by mininum, so it starts at 0
-        //angle *= rotationScale;
+        //Also adjusts angle by mininum, so it starts at 0        
         angle *= rotationScale;
         if (id == 0) {
             angle -= 2;
@@ -352,14 +352,13 @@ public class InteractableObject : MonoBehaviour {
         
         //Ensure first acceptable rotation remains slow
         if (angle < 0) { angle += rotationMin; }
-        
+        if (angle > 0) { angle -= rotationMin; }
         
         //Continue to update drag position for smoothness
         if (id == 0) { hand1 = pos; }
         if (id == 1) { hand2 = pos; }
         
-        //Rotate
-        //img.Rotate(new Vector3(0,0,modAngle));
+        //Rotate        
         img.Rotate(new Vector3(0,0,angle));
         rotation += angle;
         if (rotation > 360) { rotation -= 360; }

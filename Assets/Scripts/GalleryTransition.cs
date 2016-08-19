@@ -3,33 +3,35 @@ using System.Collections;
 using System.Collections.Generic;
 using Leap.Unity;
 
+/**
+    This class controls the transition between GalleryUI and the main area.
+    The is done using a collider which needs to be rescaled based on screen size.
+*/
 public class GalleryTransition : MonoBehaviour {
 
 
-    public GestureDetection leftHand;
-    public GestureDetection rightHand;
-    bool on = true;
-    public Camera cam;
-    float h;
-    float w;    
-    float galleryHeight = 118.38f;        //This is the height value of the GalleryUI BG as seen in Unity editor
-    float galleryZ = 1;                   //Position in world of Canvas (-9 is +1 away from 10 the camera.z value)
-    float galleryHeightMult = -0.008538899f;
-    float galleryHeightMod;               //Height works perfectly in Scene view but is somehow not aligned in Game
-                                          //view so we must add some arbitrary modifier
+    public GestureDetection leftHand;           //Direct access to gesture scripts required
+    public GestureDetection rightHand;          //
+    public Camera cam;                          //Main Camera
+    
+    bool on = true;                             //Toggle used by collider triggers                       
+    float h;                                    //Screen width in pixels
+    float w;                                    // ---   height    
+    float galleryHeight = 118.38f;              //This is the height value of the GalleryUI BG as seen in Unity editor
+    float galleryZ = 1;                         //Position in World of Canvas (-9 is +1 away from 10 the camera.z value)
+    float galleryHeightMult = -0.008538899f;    //Height works perfectly in Scene view but is somehow not aligned in Game
+    float galleryHeightMod;                     //view so we must add some arbitrary modifier
 
-
-	// Use this for initialization
-	void Start () {        
+	
+	void Start () {
         Resize();
 	}
 
     void Resize() {
-        //Resize gallery trigger area based on screen size
+        //Resize gallery trigger area based on screen size        
         h = cam.pixelHeight;
         w = cam.pixelWidth;        
         galleryHeightMod = h * galleryHeightMult;
-        //Debug.Log((-4.5f / cam.pixelHeight));
 
         //The collision area needs to be a cube that is as wide as the screen
         //and the top face must be aligned with the cam center position
@@ -42,7 +44,7 @@ public class GalleryTransition : MonoBehaviour {
         float zScale = 2;
         Vector3 scale = new Vector3(xScale, yScale, zScale);
 
-        //Rotate collider
+        //Rotate collider to correct position
         Vector3 topOfUI = cam.ScreenToWorldPoint(new Vector3(w*.5f,  galleryHeight + galleryHeightMod, galleryZ));
         Vector3 topDir = cam.transform.position - cam.ScreenToWorldPoint(new Vector3(w*.5f, galleryHeight, galleryZ));
         float angleDif = Vector3.Angle(cam.transform.position, topDir);
@@ -52,14 +54,15 @@ public class GalleryTransition : MonoBehaviour {
         transform.localScale = scale;
         transform.position = pos;
     }
-
-	// Update is called once per frame
+    
 	void Update () {
+        //In case screen size is changed, fix the collider position
         if (h != cam.pixelHeight || w != cam.pixelWidth) {
             Resize();
         }
 	}
 
+    //These triggers fire when the hands move into the gallery area
     void OnTriggerEnter(Collider other) {
         if (other != null) {
             if (other.gameObject.name.Equals("palmL")) {

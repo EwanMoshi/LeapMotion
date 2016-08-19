@@ -2,53 +2,57 @@
 using System.Collections;
 using UnityEngine.UI;
 
+/**
+    This class is used by the image tiles in the GalleryUI.
+    Objects must respond to pinches via a highlight effect.
+*/
+
 public class SelectImage : MonoBehaviour {
     
-    //bool test = true;
+    
     public RectTransform rt, canvasRT;
-    public GameObject highlight;
-    Camera cam;
-    public Transform test;
+    public GameObject highlight;    
     public RawImage raw;
     
-    
+    Camera cam;
 	
     void Start() {
         rt = GetComponent<RectTransform>();
         canvasRT = GameObject.Find("GalleryUI").GetComponent<RectTransform>();
-        highlight = transform.Find("Highlight").gameObject;
-        //cam = GameObject.Find("GalleryCamera").GetComponent<Camera>();
+        highlight = transform.Find("Highlight").gameObject;        
         cam = GameObject.Find("Main Camera").GetComponent<Camera>();
         if (raw == null) { raw = GetComponentInChildren<RawImage>(); }
     }
-    
-   
     
     public bool IsSelected() {
         return highlight.activeSelf;
     }
     
     public void DeSelect() {
+        if (highlight == null) { GetHighlight(); }
         highlight.SetActive(false);
     }
     
     public void Toggle() {
+        if (highlight == null) { GetHighlight(); }        
         highlight.SetActive(!highlight.activeSelf);
     }
     
+    void GetHighlight() {
+        highlight = transform.Find("Highlight").gameObject;
+    }
+    
+    //Used to check whether a pinch position was over this image
     public bool PinchCheck(Vector3 pos) {
         Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(cam,pos);
         return RectTransformUtility.RectangleContainsScreenPoint(rt, screenPos, cam);
     }
     
+    //Check a pinch is on to of this image and report results. -1 failed, 0 deslect, 1 select
     public int Pinch(Vector3 pos, int force = -1) {
-        //pos.x *= (60/45);
-        Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(cam,pos);
-        screenPos.x *= (60/45);
-        //Debug.Log("Pinch Gallery - ScreenPos: " + screenPos + ", Pos: " + pos);
-        if (test != null) { test.position = pos; }
+        //Position must be translated to screenPosition to check against UI elements
+        Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(cam,pos);            
         if (RectTransformUtility.RectangleContainsScreenPoint(rt, screenPos, cam)) {
-            
             if (highlight != null) { 
                 bool state = !highlight.activeSelf;
                 if (force == 0) { state = false; }
